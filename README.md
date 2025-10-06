@@ -1,47 +1,101 @@
-# Svelte + TS + Vite
+# OpenRemote Alarm Frontend
 
-This template should help get you started developing with Svelte and TypeScript in Vite.
+A Svelte-based frontend application for managing OpenRemote alarms with real-time updates.
 
-## Recommended IDE Setup
+## Prerequisites
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+- [Bun](https://bun.sh) - A fast all-in-one JavaScript runtime
+- OpenRemote instance running on `https://localhost` with Keycloak authentication
 
-## Need an official Svelte framework?
+## Installation
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+1. **Install Bun** (if not already installed):
 
-## Technical considerations
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   ```
 
-**Why use this over SvelteKit?**
+   Or on Windows:
 
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
+   ```bash
+   powershell -c "irm bun.sh/install.ps1 | iex"
+   ```
 
-This template contains as little as possible to get started with Vite + TypeScript + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
+2. **Install dependencies**:
+   ```bash
+   bun install
+   ```
 
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
+## Development
 
-**Why `global.d.ts` instead of `compilerOptions.types` inside `jsconfig.json` or `tsconfig.json`?**
+Start the development server:
 
-Setting `compilerOptions.types` shuts out all other types not explicitly listed in the configuration. Using triple-slash references keeps the default TypeScript setting of accepting type information from the entire workspace, while also adding `svelte` and `vite/client` type information.
-
-**Why include `.vscode/extensions.json`?**
-
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
-
-**Why enable `allowJs` in the TS template?**
-
-While `allowJs: false` would indeed prevent the use of `.js` files in the project, it does not prevent the use of JavaScript syntax in `.svelte` files. In addition, it would force `checkJs: false`, bringing the worst of both worlds: not being able to guarantee the entire codebase is TypeScript, and also having worse typechecking for the existing JavaScript. In addition, there are valid use cases in which a mixed codebase may be relevant.
-
-**Why is HMR not preserving my local component state?**
-
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/rixo/svelte-hmr#svelte-hmr).
-
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```ts
-// store.ts
-// An extremely simple external store
-import { writable } from 'svelte/store'
-export default writable(0)
+```bash
+bun run dev
 ```
+
+The application will be available at `https://localhost:5173` (HTTPS is required for OpenRemote integration).
+
+## Build
+
+Build the application for production:
+
+```bash
+bun run build
+```
+
+## Preview
+
+Preview the production build:
+
+```bash
+bun run preview
+```
+
+## Type Checking
+
+Run TypeScript type checking:
+
+```bash
+bun run check
+```
+
+## Features
+
+- **Real-time Alarm Management**: View and create alarms with live updates
+- **OpenRemote Integration**: Full integration with OpenRemote's alarm system
+- **Responsive Design**: Built with Tailwind CSS for mobile-first design
+- **TypeScript Support**: Full type safety with Svelte 5
+
+## Configuration
+
+The application is configured to connect to:
+
+- OpenRemote Manager: `https://localhost`
+- Keycloak Auth: `https://localhost/auth`
+- Realm: `master`
+- Language: Dutch (`nl`)
+
+To modify these settings, update the OpenRemote initialization in [src/App.svelte](src/App.svelte).
+
+## Project Structure
+
+```
+src/
+├── App.svelte          # Main application component
+├── main.ts            # Application entry point
+├── app.css            # Global styles with Tailwind
+└── lib/
+    ├── Header.svelte       # Header component
+    ├── Alarm.svelte        # Alarm card component
+    └── AddAlarmForm.svelte # Form for creating new alarms
+```
+
+## Technologies
+
+- **[Svelte 5](https://svelte.dev)** - Frontend framework
+- **[TypeScript](https://www.typescriptlang.org)** - Type safety
+- **[Tailwind CSS](https://tailwindcss.com)** - Styling
+- **[OpenRemote](https://openremote.io)** - IoT platform integration
+- **[Vite](https://vitejs.dev)** - Build tool
+- **[Bun](https://bun.sh)** - JavaScript runtime and package manager
