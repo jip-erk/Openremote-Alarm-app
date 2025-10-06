@@ -1,6 +1,11 @@
 <script lang="ts">
   import type { SentAlarm } from "@openremote/model";
+  import { openRemoteService } from "$lib/store.svelte";
+  import { PageIndex } from "$lib/pages";
   import dayjs from "dayjs";
+  import relativeTime from "dayjs/plugin/relativeTime";
+
+  dayjs.extend(relativeTime);
 
   const { alarm }: { alarm: SentAlarm } = $props();
 
@@ -65,8 +70,9 @@
   };
 </script>
 
-<div
-  class="w-full ring-1 ring-primary bg-primary/20 rounded-lg flex flex-col gap-2 p-2"
+<button
+  onclick={() => openRemoteService.navigateTo(PageIndex.REPORT, alarm)}
+  class="w-full bg-primary/20 rounded-lg flex flex-col gap-2 p-2"
 >
   <div class="flex justify-between items-center">
     <span class="font-medium">{alarm.title}</span>
@@ -84,6 +90,6 @@
     </div>
   </div>
   <div>
-    <span>{dayjs(alarm.createdOn).format("DD/MM/YYYY")}</span>
+    <span>{dayjs(alarm.createdOn).fromNow()}</span>
   </div>
-</div>
+</button>
