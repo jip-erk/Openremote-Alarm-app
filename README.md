@@ -6,6 +6,7 @@ A Svelte-based frontend application for managing OpenRemote alarms with real-tim
 
 - [Bun](https://bun.sh) - A fast all-in-one JavaScript runtime
 - OpenRemote instance running on `https://localhost` with Keycloak authentication
+- ESLint + Prettier externsions for code formatting and linting
 
 ## Installation
 
@@ -63,29 +64,33 @@ bun run check
 Please follow these guidelines to maintain code quality and consistency:
 
 ### 🎨 **Styling & Components**
+
 - **UI Components**: Use components from [shadcn-svelte](https://shadcn-svelte.com/)
 - **Custom Styling**: Modify components in [`src/lib/components/ui/`](src/lib/components/ui/) for custom styling
 - **CSS Framework**: Use **ONLY** Tailwind CSS - no custom CSS or other frameworks
 - **Colors**: Use global CSS variables defined in [`src/app.css`](src/app.css) instead of hardcoded colors
 
 ### 🔀 **Git Workflow**
+
 - **Branch Naming**: Since this will be integrated into the main codebase, make it clear in branch names that it's from the POC:
 - **Never commit directly to POC**: Even though POC uses master as main branch, always branch off of POC and **create pull requests**
-     
+
 ### 🔌 **OpenRemote API**
+
 - **Store Pattern**: All OpenRemote logic must be inside the store (`src/lib/store.svelte`)
 - **No Direct API Calls**: Don't make OpenRemote API calls directly in components
 - **Type Safety**: Use proper types from `@openremote/model`
 
 ### 🏗️ **Code Standards**
+
 - **DRY Principle**: Create reusable components if you have the same code in 2+ places
 - **TypeScript**: All new files must be TypeScript (`.ts`, `.svelte` with `<script lang="ts">`)
 - **Type Safety**: Use proper types from `@openremote/model` where applicable
 - **Svelte 5**: Use the new runes syntax (`$state`, `$derived`, `$props`, etc.)
 - **Imports**: Use the `$lib` alias for internal imports
 
-
 ### 📁 **File Organization**
+
 - **Components**: Place in [`src/lib/components/`](src/lib/components/)
 - **Pages**: Place in [`src/lib/pages/`](src/lib/pages/)
 - **Utilities**: Place in [`src/lib/utils.ts`](src/lib/utils.ts)
@@ -93,6 +98,7 @@ Please follow these guidelines to maintain code quality and consistency:
 - **Store**: All state management in [`src/lib/store.svelte`](src/lib/store.svelte)
 
 ### 🚫 **What NOT to do**
+
 - ❌ Don't add custom CSS files or `<style>` blocks
 - ❌ Don't use inline styles (`style="..."`)
 - ❌ Don't hardcode colors (use CSS variables)
@@ -103,6 +109,7 @@ Please follow these guidelines to maintain code quality and consistency:
 - ❌ Don't make direct OpenRemote API calls in components
 
 ### ✅ **Before Submitting**
+
 1. Run type checking: `bun run check`
 2. Test the application: `bun run dev`
 3. Ensure all colors use CSS variables

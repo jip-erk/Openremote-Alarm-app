@@ -8,7 +8,7 @@
 </script>
 
 {#if appState.initialized}
-  <main class="h-full flex flex-col">
+  <main class="flex h-full flex-col">
     <Header />
     <div class="flex-1 overflow-auto">
       <CurrentPage.component />

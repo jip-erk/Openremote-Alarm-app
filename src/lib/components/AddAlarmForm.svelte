@@ -14,7 +14,7 @@
 </script>
 
 <script lang="ts">
-  import type { Alarm, Asset } from "@openremote/model";
+  import type { Alarm } from "@openremote/model";
   import { AlarmSeverity, AlarmStatus, AlarmSource } from "@openremote/model";
   import type { SentAlarm } from "@openremote/model";
   import { appState, openRemoteService } from "$lib/store.svelte";
@@ -39,11 +39,7 @@
         ...alarm,
       };
 
-      await openRemoteService.updateAlarm(
-        currentAlarm.id,
-        sentAlarm,
-        linkedAssets
-      );
+      await openRemoteService.updateAlarm(currentAlarm.id, sentAlarm);
     } else {
       await openRemoteService.addAlarm(alarm, linkedAssets);
     }
@@ -58,14 +54,14 @@
 </script>
 
 <div class="p-4">
-  <div class="p-2 w-full flex flex-col gap-2 rounded-md ring-primary">
+  <div class="ring-primary flex w-full flex-col gap-2 rounded-md p-2">
     <label>
       Title
       <input
         type="text"
         bind:value={alarm.title}
         placeholder="Title"
-        class="w-full bg-primary/20 rounded-md p-2 outline-none"
+        class="bg-primary/20 w-full rounded-md p-2 outline-none"
       />
     </label>
     <label>
@@ -73,7 +69,7 @@
       <textarea
         bind:value={alarm.content}
         placeholder="Content"
-        class="w-full bg-primary/20 rounded-md p-2 outline-none mt-2 resize-none"
+        class="bg-primary/20 mt-2 w-full resize-none rounded-md p-2 outline-none"
       ></textarea>
     </label>
     <label>
@@ -132,7 +128,7 @@
         <Select.Content>
           <Select.Group>
             <Select.Label>Assignee</Select.Label>
-            {#each appState.assignees as assignee}
+            {#each appState.assignees as assignee (assignee.label)}
               <Select.Item value={assignee.value || ""} label={assignee.label}>
                 {assignee.label}
               </Select.Item>
@@ -159,7 +155,7 @@
         <Select.Content>
           <Select.Group>
             <Select.Label>Assets</Select.Label>
-            {#each appState.assets as asset}
+            {#each appState.assets as asset (asset.id?.assetId)}
               <Select.Item
                 value={asset.id?.assetId ?? ""}
                 label={asset.assetName}
@@ -171,7 +167,7 @@
         </Select.Content>
       </Select.Root>
     </label>
-    <button class="p-2 bg-primary text-white rounded-md" onclick={handleSubmit}
+    <button class="bg-primary rounded-md p-2 text-white" onclick={handleSubmit}
       >{appState.selectedAlarm ? "Update" : "Add"}</button
     >
   </div>

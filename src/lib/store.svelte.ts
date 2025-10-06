@@ -120,7 +120,7 @@ class OpenRemoteService {
     }
   }
 
-  async updateAlarm(id: number, alarm: SentAlarm, assetIds: string[]) {
+  async updateAlarm(id: number, alarm: SentAlarm) {
     try {
       if (alarm.assigneeId === "") delete alarm.assigneeId;
       const response = await rest.api.AlarmResource.updateAlarm(id, alarm);
@@ -155,7 +155,7 @@ class OpenRemoteService {
       const response = await rest.api.UserResource.query({
         realmPredicate: { name: "master" },
       });
-      let options = response.data
+      const options = response.data
         .filter((u) => u.username != "manager-keycloak")
         .map((u) => {
           return { value: u.id ?? null, label: u.username || "Unknown" };

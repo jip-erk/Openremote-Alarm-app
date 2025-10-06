@@ -5,11 +5,11 @@
   const roles = $derived(appState.user?.roles?.get("openremote"));
 </script>
 
-<div class="border-t-2 p-4 flex justify-evenly">
-  {#each pages.map( (p) => (p.roles.some( (r) => roles?.includes(r) ) ? p : null) ) as page}
+<div class="flex justify-evenly border-t-2 p-4">
+  {#each pages.map( (p) => (p.roles.some( (r) => roles?.includes(r) ) ? p : null) ) as page (page?.title)}
     {#if page}
       <button
-        class="flex flex-col items-center disabled:text-primary"
+        class="disabled:text-primary flex flex-col items-center"
         onclick={() => openRemoteService.navigateTo(page.index)}
         disabled={page.index === appState.pageIndex && !appState.selectedAlarm}
       >

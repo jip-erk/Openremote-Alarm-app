@@ -10,12 +10,12 @@
   );
 </script>
 
-<div class="p-6 flex flex-col gap-6 max-w-4xl mx-auto">
+<div class="mx-auto flex max-w-4xl flex-col gap-6 p-6">
   <section>
-    <div class="flex items-center justify-between mb-4">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-semibold">Your Alarms</h2>
       <span
-        class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded"
+        class="rounded bg-blue-100 px-2 py-1 text-sm font-medium text-blue-800"
       >
         {userAlarms.length}
       </span>
@@ -31,10 +31,10 @@
   </section>
 
   <section>
-    <div class="flex items-center justify-between mb-4">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-semibold">Other Alarms</h2>
       <span
-        class="bg-gray-100 text-gray-700 text-sm font-medium px-2 py-1 rounded"
+        class="rounded bg-gray-100 px-2 py-1 text-sm font-medium text-gray-700"
       >
         {otherAlarms.length}
       </span>

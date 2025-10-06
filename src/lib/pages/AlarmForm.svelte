@@ -16,7 +16,7 @@
 </script>
 
 {#if appState.selectedAlarm}
-  <div class="flex justify-between items-center px-4">
+  <div class="flex items-center justify-between px-4">
     <button
       onclick={() => {
         openRemoteService.navigateTo(PageIndex.ALARMS);

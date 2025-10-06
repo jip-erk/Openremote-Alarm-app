@@ -11,7 +11,7 @@
 
   <DropdownMenu.Root>
     <DropdownMenu.Trigger>
-      <Avatar.Root class="w-12 h-12">
+      <Avatar.Root class="h-12 w-12">
         <Avatar.Fallback
           >{appState.user?.username
             ?.split(" ")

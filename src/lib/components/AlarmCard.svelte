@@ -72,18 +72,18 @@
 
 <button
   onclick={() => openRemoteService.navigateTo(PageIndex.REPORT, alarm)}
-  class="w-full bg-primary/20 rounded-lg flex flex-col gap-2 p-2"
+  class="bg-primary/20 flex w-full flex-col gap-2 rounded-lg p-2"
 >
-  <div class="flex justify-between items-center">
+  <div class="flex items-center justify-between">
     <span class="font-medium">{alarm.title}</span>
     <div class="flex gap-2">
       <span
-        class="ring-1 px-2 py-1 text-xs rounded-md {getSeverityClasses(
+        class="rounded-md px-2 py-1 text-xs ring-1 {getSeverityClasses(
           alarm.severity as string
         )}">{getSeverityText(alarm.severity as string)}</span
       >
       <span
-        class="ring-1 px-2 py-1 text-xs rounded-md {getAlarmClasses(
+        class="rounded-md px-2 py-1 text-xs ring-1 {getAlarmClasses(
           alarm.status as string
         )}">{getStatusText(alarm.status as string)}</span
       >

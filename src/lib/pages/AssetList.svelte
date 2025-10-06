@@ -8,8 +8,8 @@
   });
 </script>
 
-<div class="p-4 flex flex-col gap-4">
-  {#each appState.assets as asset}
+<div class="flex flex-col gap-4 p-4">
+  {#each appState.assets as asset (asset.id?.assetId)}
     <AssetCard {asset} />
   {/each}
 </div>

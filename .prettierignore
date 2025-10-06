@@ -1,0 +1,8 @@
+node_modules/
+dist/
+build/
+.svelte-kit/
+package-lock.json
+bun.lockb
+*.min.js
+*.min.css
