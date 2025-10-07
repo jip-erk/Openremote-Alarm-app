@@ -70,9 +70,7 @@ function normalizeUrl(value?: string) {
 function resolveManagerBaseUrl() {
   const explicit = normalizeUrl(import.meta.env?.VITE_OR_MANAGER_URL);
   if (explicit) return explicit;
-  if (typeof window !== "undefined" && import.meta.env?.DEV) {
-    return `${window.location.origin}/or`;
-  }
+  // Always use the Docker OpenRemote instance
   return DEFAULT_MANAGER_URL;
 }
 
@@ -120,7 +118,7 @@ class OpenRemoteService {
         consoleAutoEnable: false,
         skipFallbackToBasicAuth: true,
         autoLogin: true,
-        realm: undefined,
+        realm: "master",
         configureTranslationsOptions: (options: any) => {
           options.lng = "nl";
         },
