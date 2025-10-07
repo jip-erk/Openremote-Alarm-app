@@ -1,51 +1,130 @@
 <script lang="ts">
+  import { AlarmStatus } from "@openremote/model";
   import AlarmCard from "$lib/components/AlarmCard.svelte";
+  import { Badge } from "$lib/components/ui/badge/index.js";
+  import { Button } from "$lib/components/ui/button/index.js";
   import { appState } from "$lib/store.svelte";
 
+  const statusFilters = [
+    { label: "All", value: "all" },
+    { label: "Open", value: AlarmStatus.OPEN },
+    { label: "In progress", value: AlarmStatus.IN_PROGRESS },
+    { label: "Acknowledged", value: AlarmStatus.ACKNOWLEDGED },
+    { label: "Resolved", value: AlarmStatus.RESOLVED },
+  ] as const;
+
+  type FilterValue = (typeof statusFilters)[number]["value"];
+
+  let filter = $state<FilterValue>("all");
+
   const userAlarms = $derived(
-    appState.alarms.filter((a) => a.assigneeId === appState.user?.id)
+    appState.alarms.filter((alarm) => alarm.assigneeId === appState.user?.id)
   );
+  const userActive = $derived(
+    userAlarms.filter(
+      (alarm) =>
+        alarm.status === AlarmStatus.OPEN ||
+        alarm.status === AlarmStatus.IN_PROGRESS
+    )
+  );
+
   const otherAlarms = $derived(
-    appState.alarms.filter((a) => a.assigneeId !== appState.user?.id)
+    appState.alarms.filter((alarm) => alarm.assigneeId !== appState.user?.id)
+  );
+
+  const visibleAlarms = $derived(
+    filter === "all"
+      ? otherAlarms
+      : otherAlarms.filter((alarm) => alarm.status === filter)
   );
 </script>
 
-<div class="mx-auto flex max-w-4xl flex-col gap-6 p-6">
-  <section>
-    <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-xl font-semibold">Your Alarms</h2>
-      <span
-        class="rounded bg-blue-100 px-2 py-1 text-sm font-medium text-blue-800"
-      >
-        {userAlarms.length}
-      </span>
-    </div>
+<div class="flex flex-col gap-10 pb-24">
+  <section class="space-y-4">
+    <header class="flex items-center justify-between gap-3">
+      <div class="flex flex-col">
+        <h2 class="text-foreground text-lg font-semibold tracking-tight">
+          Your queue
+        </h2>
+        <p class="text-muted-foreground text-sm">
+          Focus on alarms directly assigned to you.
+        </p>
+      </div>
+      <Badge variant="subtle" class="bg-primary/10 text-primary">
+        {userActive.length} active
+      </Badge>
+    </header>
 
-    <div class="flex flex-col gap-3">
+    <div class="grid gap-4 md:grid-cols-2">
       {#each userAlarms as alarm (alarm.id)}
         <AlarmCard {alarm} />
       {:else}
-        <p class="text-gray-500 text-center py-4">No alarms assigned to you</p>
+        <div
+          class="rounded-3xl border border-dashed border-border/60 bg-[var(--surface-glass)]/70 p-8 text-center text-sm text-muted-foreground"
+        >
+          You’re all caught up — no alarms are assigned to you right now.
+        </div>
       {/each}
     </div>
   </section>
 
-  <section>
-    <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-xl font-semibold">Other Alarms</h2>
-      <span
-        class="rounded bg-gray-100 px-2 py-1 text-sm font-medium text-gray-700"
-      >
-        {otherAlarms.length}
-      </span>
-    </div>
+  <section class="space-y-5">
+    <header
+      class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"
+    >
+      <div>
+        <h2 class="text-foreground text-lg font-semibold tracking-tight">
+          All alarms
+        </h2>
+        <p class="text-muted-foreground text-sm">
+          Review and monitor alarms across your organization.
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        {#each statusFilters as option (option.value)}
+          {@const isActive = filter === option.value}
+          <Button
+            variant={isActive ? "accent" : "ghost"}
+            size="sm"
+            class={`rounded-full border ${
+              isActive
+                ? "border-transparent"
+                : "border-border/60 text-muted-foreground"
+            }`}
+            onclick={() => {
+              filter = option.value;
+            }}
+          >
+            {option.label}
+          </Button>
+        {/each}
+      </div>
+    </header>
 
-    <div class="flex flex-col gap-3">
-      {#each otherAlarms as alarm (alarm.id)}
+    <div class="grid gap-4 md:grid-cols-2">
+      {#each visibleAlarms as alarm (alarm.id)}
         <AlarmCard {alarm} />
       {:else}
-        <p class="text-gray-500 text-center py-4">No other alarms available</p>
+        <div
+          class="rounded-3xl border border-dashed border-border/60 bg-[var(--surface-glass)]/70 p-10 text-center text-sm text-muted-foreground"
+        >
+          No alarms match the current filter.
+        </div>
       {/each}
     </div>
+
+    {#if filter !== "all"}
+      <div class="flex justify-end">
+        <Button
+          variant="link"
+          class="text-sm"
+          onclick={() => {
+            filter = "all";
+          }}
+        >
+          Reset filters
+        </Button>
+      </div>
+    {/if}
   </section>
 </div>

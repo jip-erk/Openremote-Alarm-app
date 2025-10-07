@@ -8,6 +8,20 @@ export default defineConfig({
   plugins: [svelte(), basicSsl(), tailwindcss()],
   server: {
     host: true,
+    proxy: {
+      "/or": {
+        target: "https://localhost",
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+        rewrite: (path) => path.replace(/^\/or/, ""),
+      },
+      "/auth": {
+        target: "https://localhost",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   resolve: {
     alias: {

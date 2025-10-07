@@ -1,38 +1,43 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { openRemoteService, appState } from "$lib/store.svelte";
   import AlarmForm from "$lib/components/AddAlarmForm.svelte";
-  import ArrowBack from "@iconify-svelte/material-symbols/arrow-back";
-  import Delete from "@iconify-svelte/material-symbols/delete";
+  import { Button } from "$lib/components/ui/button/index.js";
   import { PageIndex } from "$lib/pages";
+  import { appState, openRemoteService } from "$lib/store.svelte";
+  import ArrowLeft from "@lucide/svelte/icons/arrow-left";
 
   onMount(() => {
-    if (appState.selectedAlarm)
+    if (appState.selectedAlarm) {
       openRemoteService.getAlarm(appState.selectedAlarm.id);
+    }
 
     openRemoteService.listAssignees();
     openRemoteService.fetchAssets();
   });
+
+  const handleBack = () => {
+    openRemoteService.navigateTo(PageIndex.ALARMS);
+  };
+
+  const handleDelete = async () => {
+    if (!appState.selectedAlarm?.id) return;
+    await openRemoteService.removeAlarm(appState.selectedAlarm.id);
+    openRemoteService.navigateTo(PageIndex.ALARMS);
+  };
 </script>
 
-{#if appState.selectedAlarm}
-  <div class="flex items-center justify-between px-4">
-    <button
-      onclick={() => {
-        openRemoteService.navigateTo(PageIndex.ALARMS);
-      }}><ArrowBack height="2em" /></button
-    >
-    <span class="text-xl">Update</span>
-    <button
-      onclick={() =>
-        openRemoteService
-          .removeAlarm(appState.selectedAlarm!.id!)
-          .then(() => openRemoteService.navigateTo(PageIndex.ALARMS))}
-      ><Delete height="2em" /></button
-    >
+<div class="flex flex-col gap-6 pb-24">
+  <div class="flex items-center gap-3">
+    <Button variant="ghost" size="sm" class="gap-2" onclick={handleBack}>
+      <ArrowLeft class="size-4" />
+      Back to alarms
+    </Button>
   </div>
-{/if}
 
-{#key appState.selectedAlarm?.id}
-  <AlarmForm currentAlarm={appState.selectedAlarm ?? undefined} />
-{/key}
+  {#key appState.selectedAlarm?.id}
+    <AlarmForm
+      currentAlarm={appState.selectedAlarm ?? undefined}
+      onRemove={appState.selectedAlarm ? handleDelete : undefined}
+    />
+  {/key}
+</div>

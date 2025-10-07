@@ -19,8 +19,28 @@
   import type { SentAlarm } from "@openremote/model";
   import { appState, openRemoteService } from "$lib/store.svelte";
   import * as Select from "$lib/components/ui/select/index.js";
+  import {
+    Card,
+    CardContent,
+    CardHeader,
+  } from "$lib/components/ui/card/index.js";
+  import { Input } from "$lib/components/ui/input/index.js";
+  import { Textarea } from "$lib/components/ui/textarea/index.js";
+  import { Label } from "$lib/components/ui/label/index.js";
+  import { Button } from "$lib/components/ui/button/index.js";
+  import { Badge } from "$lib/components/ui/badge/index.js";
+  import Trash2 from "@lucide/svelte/icons/trash-2";
+  import {
+    formatSeverityLabel,
+    formatStatusLabel,
+    severityBadgeClass,
+    statusBadgeClass,
+  } from "$lib/utils.js";
 
-  const { currentAlarm }: { currentAlarm?: SentAlarm } = $props();
+  const { currentAlarm, onRemove } = $props<{
+    currentAlarm?: SentAlarm;
+    onRemove?: () => void;
+  }>();
 
   let alarm = $state<Alarm>({
     title: currentAlarm?.title || "",
@@ -32,143 +52,255 @@
     assigneeId: currentAlarm?.assigneeId || undefined,
   });
 
-  const handleSubmit = async () => {
-    if (currentAlarm?.id) {
-      const sentAlarm: SentAlarm = {
-        ...currentAlarm,
-        ...alarm,
-      };
-
-      await openRemoteService.updateAlarm(currentAlarm.id, sentAlarm);
-    } else {
-      await openRemoteService.addAlarm(alarm, linkedAssets);
+  const initialLinkedAssets: string[] = [];
+  if (currentAlarm?.asset) {
+    for (const asset of currentAlarm.asset) {
+      const rawId = (asset as { id?: string | { assetId?: string } }).id;
+      const resolvedId =
+        typeof rawId === "string"
+          ? rawId
+          : typeof rawId?.assetId === "string"
+            ? rawId.assetId
+            : undefined;
+      if (resolvedId) {
+        initialLinkedAssets.push(resolvedId);
+      }
     }
-    openRemoteService.navigateTo(0);
-  };
+  }
 
-  let linkedAssets = $state<string[]>(
-    currentAlarm?.asset
-      ?.map((a) => a.id)
-      .filter((id): id is string => id !== undefined) || []
+  let linkedAssets = $state<string[]>(initialLinkedAssets);
+
+  const linkedAssetNames = $derived(
+    appState.assets
+      .filter(
+        (asset) => asset.id?.assetId && linkedAssets.includes(asset.id.assetId)
+      )
+      .map((asset) => asset.assetName)
   );
+
+  const submitLabel = $derived(currentAlarm ? "Update alarm" : "Create alarm");
+
+  const canSubmit = $derived(() => (alarm.title ?? "").trim().length > 0);
+
+  let submitting = $state(false);
+
+  const handleSubmit = async (event?: SubmitEvent) => {
+    event?.preventDefault();
+    if (!canSubmit || submitting) return;
+    submitting = true;
+    try {
+      if (currentAlarm?.id) {
+        const sentAlarm: SentAlarm = {
+          ...currentAlarm,
+          ...alarm,
+        };
+
+        await openRemoteService.updateAlarm(currentAlarm.id, sentAlarm);
+      } else {
+        await openRemoteService.addAlarm(alarm, linkedAssets);
+      }
+      openRemoteService.navigateTo(0);
+    } finally {
+      submitting = false;
+    }
+  };
 </script>
 
-<div class="p-4">
-  <div class="ring-primary flex w-full flex-col gap-2 rounded-md p-2">
-    <label>
-      Title
-      <input
-        type="text"
-        bind:value={alarm.title}
-        placeholder="Title"
-        class="bg-primary/20 w-full rounded-md p-2 outline-none"
-      />
-    </label>
-    <label>
-      Content
-      <textarea
-        bind:value={alarm.content}
-        placeholder="Content"
-        class="bg-primary/20 mt-2 w-full resize-none rounded-md p-2 outline-none"
-      ></textarea>
-    </label>
-    <label>
-      Severity
-      <Select.Root
-        type="single"
-        name="favoriteFruit"
-        bind:value={alarm.severity}
-      >
-        <Select.Trigger class="w-full">
-          {alarm.severity}
-        </Select.Trigger>
-        <Select.Content>
-          <Select.Group>
-            <Select.Label>Severity</Select.Label>
-            {#each Object.values(severities) as status (status)}
-              <Select.Item value={status} label={status}>
-                {status}
-              </Select.Item>
-            {/each}
-          </Select.Group>
-        </Select.Content>
-      </Select.Root>
-    </label>
-    <label>
-      Status
-      <Select.Root type="single" name="favoriteFruit" bind:value={alarm.status}>
-        <Select.Trigger class="w-full">
-          {alarm.status}
-        </Select.Trigger>
-        <Select.Content>
-          <Select.Group>
-            <Select.Label>Status</Select.Label>
-            {#each Object.values(statuses) as status (status)}
-              <Select.Item value={status} label={status}>
-                {status}
-              </Select.Item>
-            {/each}
-          </Select.Group>
-        </Select.Content>
-      </Select.Root>
-    </label>
-    <label>
-      Assignee
-      <Select.Root
-        type="single"
-        name="favoriteFruit"
-        bind:value={alarm.assigneeId}
-      >
-        <Select.Trigger class="w-full">
-          {alarm.assigneeId
-            ? (appState.assignees.find((a) => a.value === alarm.assigneeId)
-                ?.label ?? "None")
-            : "None"}
-        </Select.Trigger>
-        <Select.Content>
-          <Select.Group>
-            <Select.Label>Assignee</Select.Label>
-            {#each appState.assignees as assignee (assignee.label)}
-              <Select.Item value={assignee.value || ""} label={assignee.label}>
-                {assignee.label}
-              </Select.Item>
-            {/each}
-          </Select.Group>
-        </Select.Content>
-      </Select.Root>
-    </label>
-    <label>
-      Linked assets ({linkedAssets.length})
-      <Select.Root
-        type="multiple"
-        name="favoriteFruit"
-        bind:value={linkedAssets}
-      >
-        <Select.Trigger class="w-full">
-          {appState.assets
-            .filter(
-              (a) => a?.id?.assetId && linkedAssets.includes(a.id?.assetId)
-            )
-            .map((a) => a.assetName)
-            .join(", ") || "Select assets"}</Select.Trigger
+<div class="flex flex-col gap-6">
+  <Card class="border-border/50 border bg-[var(--surface-elevated)]/50">
+    <CardHeader class="space-y-3">
+      <div class="flex flex-wrap gap-3">
+        <Badge
+          variant="subtle"
+          class={`rounded-full border px-3 py-1 text-xs font-semibold tracking-wide uppercase ${severityBadgeClass(
+            alarm.severity as AlarmSeverity
+          )}`}
         >
-        <Select.Content>
-          <Select.Group>
-            <Select.Label>Assets</Select.Label>
-            {#each appState.assets as asset (asset.id?.assetId)}
-              <Select.Item
-                value={asset.id?.assetId ?? ""}
-                label={asset.assetName}
-              >
-                {asset.assetName}
-              </Select.Item>
-            {/each}
-          </Select.Group>
-        </Select.Content>
-      </Select.Root>
-    </label>
-    <button class="bg-primary rounded-md p-2 text-white" onclick={handleSubmit}
-      >{appState.selectedAlarm ? "Update" : "Add"}</button
+          {formatSeverityLabel(alarm.severity as AlarmSeverity)}
+        </Badge>
+        <Badge
+          variant="subtle"
+          class={`rounded-full border px-3 py-1 text-xs font-semibold tracking-wide uppercase ${statusBadgeClass(
+            alarm.status as AlarmStatus
+          )}`}
+        >
+          {formatStatusLabel(alarm.status as AlarmStatus)}
+        </Badge>
+        <Badge variant="muted" class="rounded-full">
+          {linkedAssets.length} linked asset{linkedAssets.length === 1
+            ? ""
+            : "s"}
+        </Badge>
+      </div>
+      <div class="flex flex-col gap-1">
+        <h3 class="text-foreground text-xl font-semibold">{submitLabel}</h3>
+        <p class="text-muted-foreground text-sm">
+          Provide alarm details, severity, assignee, and any linked assets.
+        </p>
+      </div>
+    </CardHeader>
+    <CardContent class="space-y-4">
+      {#if linkedAssetNames.length > 0}
+        <div class="text-muted-foreground flex flex-wrap gap-2 text-xs">
+          {#each linkedAssetNames as name (name)}
+            <span class="rounded-full bg-[var(--surface-glass)] px-3 py-1">
+              {name}
+            </span>
+          {/each}
+        </div>
+      {/if}
+    </CardContent>
+  </Card>
+
+  <form class="space-y-6" onsubmit={handleSubmit}>
+    <div class="grid gap-5">
+      <div class="space-y-2">
+        <Label for="alarm-title">Title</Label>
+        <Input
+          id="alarm-title"
+          name="title"
+          placeholder="Alarm title"
+          bind:value={alarm.title}
+          required
+        />
+      </div>
+
+      <div class="space-y-2">
+        <Label for="alarm-content">Description</Label>
+        <Textarea
+          id="alarm-content"
+          name="content"
+          placeholder="Describe the context and impact"
+          bind:value={alarm.content}
+          rows={5}
+        ></Textarea>
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div class="space-y-2">
+          <Label>Severity</Label>
+          <Select.Root type="single" bind:value={alarm.severity}>
+            <Select.Trigger
+              class="border-border/60 w-full rounded-2xl border bg-[var(--surface-glass)]/80 px-4 py-3 text-sm"
+            >
+              {formatSeverityLabel(alarm.severity as AlarmSeverity)}
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Group>
+                <Select.Label>Severity</Select.Label>
+                {#each severities as severity (severity)}
+                  <Select.Item
+                    value={severity}
+                    label={formatSeverityLabel(severity)}
+                  >
+                    {formatSeverityLabel(severity)}
+                  </Select.Item>
+                {/each}
+              </Select.Group>
+            </Select.Content>
+          </Select.Root>
+        </div>
+
+        <div class="space-y-2">
+          <Label>Status</Label>
+          <Select.Root type="single" bind:value={alarm.status}>
+            <Select.Trigger
+              class="border-border/60 w-full rounded-2xl border bg-[var(--surface-glass)]/80 px-4 py-3 text-sm"
+            >
+              {formatStatusLabel(alarm.status as AlarmStatus)}
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Group>
+                <Select.Label>Status</Select.Label>
+                {#each statuses as status (status)}
+                  <Select.Item value={status} label={formatStatusLabel(status)}>
+                    {formatStatusLabel(status)}
+                  </Select.Item>
+                {/each}
+              </Select.Group>
+            </Select.Content>
+          </Select.Root>
+        </div>
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div class="space-y-2">
+          <Label>Assignee</Label>
+          <Select.Root type="single" bind:value={alarm.assigneeId}>
+            <Select.Trigger
+              class="border-border/60 w-full rounded-2xl border bg-[var(--surface-glass)]/80 px-4 py-3 text-sm"
+            >
+              {alarm.assigneeId
+                ? (appState.assignees.find(
+                    (assignee) => assignee.value === alarm.assigneeId
+                  )?.label ?? "None")
+                : "None"}
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Group>
+                <Select.Label>Assignee</Select.Label>
+                {#each appState.assignees as assignee (assignee.label)}
+                  <Select.Item
+                    value={assignee.value || ""}
+                    label={assignee.label}
+                  >
+                    {assignee.label}
+                  </Select.Item>
+                {/each}
+              </Select.Group>
+            </Select.Content>
+          </Select.Root>
+        </div>
+
+        <div class="space-y-2">
+          <Label>Linked assets</Label>
+          <Select.Root type="multiple" bind:value={linkedAssets}>
+            <Select.Trigger
+              class="border-border/60 w-full rounded-2xl border bg-[var(--surface-glass)]/80 px-4 py-3 text-sm"
+            >
+              {linkedAssetNames.join(", ") || "Select assets"}
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Group>
+                <Select.Label>Assets</Select.Label>
+                {#each appState.assets as asset (asset.id?.assetId)}
+                  <Select.Item
+                    value={asset.id?.assetId ?? ""}
+                    label={asset.assetName}
+                  >
+                    {asset.assetName}
+                  </Select.Item>
+                {/each}
+              </Select.Group>
+            </Select.Content>
+          </Select.Root>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
     >
-  </div>
+      <p class="text-muted-foreground text-xs">
+        Alarm will be synced immediately through OpenRemote. You can update or
+        resolve it later from the report page.
+      </p>
+      <div class="flex items-center gap-2">
+        {#if currentAlarm?.id && onRemove}
+          <Button
+            type="button"
+            variant="outline"
+            class="text-destructive border-destructive/30 hover:text-destructive hover:border-destructive gap-2"
+            onclick={onRemove}
+          >
+            <Trash2 class="size-4" />
+            Remove alarm
+          </Button>
+        {/if}
+        <Button type="submit" disabled={!canSubmit || submitting}>
+          {submitting ? "Saving…" : submitLabel}
+        </Button>
+      </div>
+    </div>
+  </form>
 </div>

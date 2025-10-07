@@ -9,6 +9,12 @@ import type {
 } from "@openremote/model";
 import { pages } from "$lib/pages";
 
+type ThemeMode = "light" | "dark";
+export type ThemePreference = ThemeMode | "system";
+
+const THEME_STORAGE_KEY = "or-theme";
+const DEFAULT_MANAGER_URL = "https://localhost";
+
 interface User {
   id?: string;
   username: string;
@@ -29,6 +35,53 @@ function savePageIndex(index: number) {
   }
 }
 
+function getStoredThemePreference(): ThemePreference {
+  if (typeof window === "undefined") return "system";
+  const stored = localStorage.getItem(
+    THEME_STORAGE_KEY
+  ) as ThemePreference | null;
+  if (stored === "light" || stored === "dark" || stored === "system") {
+    return stored;
+  }
+  return "system";
+}
+
+function getSystemTheme(): ThemeMode {
+  if (typeof window === "undefined") return "light";
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+  return prefersDark.matches ? "dark" : "light";
+}
+
+function resolveTheme(preference: ThemePreference): ThemeMode {
+  return preference === "system" ? getSystemTheme() : preference;
+}
+
+function applyThemeClass(theme: ThemeMode) {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.toggle("dark", theme === "dark");
+  document.documentElement.dataset.theme = theme;
+}
+
+function normalizeUrl(value?: string) {
+  if (!value) return undefined;
+  return value.replace(/\/+$|\/+(?=\?)/g, "");
+}
+
+function resolveManagerBaseUrl() {
+  const explicit = normalizeUrl(import.meta.env?.VITE_OR_MANAGER_URL);
+  if (explicit) return explicit;
+  if (typeof window !== "undefined" && import.meta.env?.DEV) {
+    return `${window.location.origin}/or`;
+  }
+  return DEFAULT_MANAGER_URL;
+}
+
+function resolveKeycloakUrl(managerUrl: string) {
+  const explicit = normalizeUrl(import.meta.env?.VITE_OR_KEYCLOAK_URL);
+  if (explicit) return explicit;
+  return `${managerUrl}/auth`;
+}
+
 export const appState = $state({
   pageIndex: getStoredPageIndex(),
   selectedAlarm: null as SentAlarm | null,
@@ -37,16 +90,32 @@ export const appState = $state({
   assets: [] as UserAssetLink[],
   assignees: [] as { value: string | null; label: string }[],
   user: null as User | null,
+  themePreference: getStoredThemePreference(),
+  theme: resolveTheme(getStoredThemePreference()),
 });
+
+if (typeof window !== "undefined") {
+  applyThemeClass(appState.theme);
+  const systemWatcher = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleSystemChange = () => {
+    if (appState.themePreference === "system") {
+      appState.theme = resolveTheme("system");
+      applyThemeClass(appState.theme);
+    }
+  };
+  systemWatcher.addEventListener("change", handleSystemChange);
+}
 
 class OpenRemoteService {
   async init() {
     if (appState.initialized) return true;
 
     try {
+      const managerUrl = resolveManagerBaseUrl();
+      const keycloakUrl = resolveKeycloakUrl(managerUrl);
       const success = await openremote.init({
-        managerUrl: "https://localhost",
-        keycloakUrl: "https://localhost/auth",
+        managerUrl,
+        keycloakUrl,
         auth: "KEYCLOAK" as Auth,
         consoleAutoEnable: false,
         skipFallbackToBasicAuth: true,
@@ -67,7 +136,7 @@ class OpenRemoteService {
           roles: openremote?.roles || new Map(),
         };
 
-        await this.fetchAlarms();
+        await Promise.all([this.fetchAlarms(), this.fetchAssets()]);
 
         openremote?.events?.subscribe<AlarmEvent>(
           { eventType: "alarm" },
@@ -192,6 +261,15 @@ class OpenRemoteService {
     } catch (error) {
       console.error("Failed to logout:", error);
     }
+  }
+
+  setThemePreference(preference: ThemePreference) {
+    appState.themePreference = preference;
+    if (typeof window !== "undefined") {
+      localStorage.setItem(THEME_STORAGE_KEY, preference);
+    }
+    appState.theme = resolveTheme(preference);
+    applyThemeClass(appState.theme);
   }
 }
 
