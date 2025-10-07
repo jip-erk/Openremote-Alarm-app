@@ -142,9 +142,9 @@
     <CardContent class="space-y-4">
       {#if linkedAssetNames.length > 0}
         <div class="text-muted-foreground flex flex-wrap gap-2 text-xs">
-          {#each linkedAssetNames as name (name)}
+          {#each appState.assets.filter((asset) => asset.id?.assetId && linkedAssets.includes(asset.id.assetId)) as asset (asset.id?.assetId)}
             <span class="rounded-full bg-[var(--surface-glass)] px-3 py-1">
-              {name}
+              {asset.assetName}
             </span>
           {/each}
         </div>
