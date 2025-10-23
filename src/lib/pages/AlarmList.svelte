@@ -74,7 +74,7 @@
     >
       <div>
         <h2 class="text-foreground text-lg font-semibold tracking-tight">
-          All alarms
+          Other alarms
         </h2>
         <p class="text-muted-foreground text-sm">
           Review and monitor alarms across your organization.

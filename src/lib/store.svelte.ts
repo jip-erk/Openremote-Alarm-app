@@ -1,16 +1,17 @@
 import openremote from "@openremote/core";
 import rest from "@openremote/rest";
 import type {
-  Auth,
   AlarmEvent,
   SentAlarm,
   Alarm,
   UserAssetLink,
 } from "@openremote/model";
 import { pages } from "$lib/pages";
-
+import { Auth } from "@openremote/model";
 type ThemeMode = "light" | "dark";
 export type ThemePreference = ThemeMode | "system";
+import { Browser } from "@capacitor/browser";
+import { App } from "@capacitor/app";
 
 const THEME_STORAGE_KEY = "or-theme";
 const DEFAULT_MANAGER_URL = "https://localhost";
@@ -114,7 +115,7 @@ class OpenRemoteService {
       const success = await openremote.init({
         managerUrl,
         keycloakUrl,
-        auth: "KEYCLOAK" as Auth,
+        auth: Auth.KEYCLOAK,
         consoleAutoEnable: false,
         skipFallbackToBasicAuth: true,
         autoLogin: true,
@@ -150,6 +151,60 @@ class OpenRemoteService {
       return false;
     }
   }
+
+  async login() {
+    try {
+      const keycloak = (openremote as any)._keycloak;
+
+      const redirectUri = "openremote://auth-callback";
+
+      let loginUrl = keycloak.createLoginUrl({
+        redirectUri,
+        prompt: "login",
+      });
+
+      const urlObj = new URL(loginUrl);
+      urlObj.searchParams.set("redirect_uri", redirectUri);
+      loginUrl = urlObj.toString();
+
+      console.log("Opening login URL:", loginUrl);
+
+      await Browser.open({ url: loginUrl });
+
+      App.addListener("appUrlOpen", async (data) => {
+        if (data.url.startsWith("openremote://auth-callback")) {
+          await Browser.close();
+          appState.initialized = true;
+          console.log("Data:", data);
+          // Extract code/token from data.url and finish login
+          // You may need to exchange the code for tokens here
+        }
+      });
+    } catch (error) {
+      console.error("Failed to login:", error);
+      throw error;
+    }
+  }
+
+  // async fetchAccessToken(
+  //   url: string,
+  //   code: string,
+  //   clientId: string,
+  //   redirectUri: string
+  // ): Promise<any> {
+  //   const body = new URLSearchParams([
+  //     ["code", code],
+  //     ["grant_type", "authorization_code"],
+  //     ["client_id", clientId],
+  //     ["redirect_uri", stripHash(redirectUri)],
+  //   ]);
+
+  //   return await fetch(url, {
+  //     method: "POST",
+  //     credentials: "include",
+  //     body,
+  //   });
+  // }
 
   async fetchAlarms() {
     try {

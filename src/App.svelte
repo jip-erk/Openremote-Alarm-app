@@ -2,7 +2,7 @@
   import Header from "$lib/components/Header.svelte";
   import PageNav from "$lib/components/PageNav.svelte";
   import { pages } from "$lib/pages";
-  import { appState } from "$lib/store.svelte";
+  import { appState, openRemoteService } from "$lib/store.svelte";
 
   const CurrentPage = $derived(pages.at(appState.pageIndex) ?? pages[0]);
 </script>
@@ -45,6 +45,7 @@
         <p class="text-foreground/90 text-sm font-medium tracking-tight">
           Connecting to OpenRemote services
         </p>
+        <button onclick={() => openRemoteService.login()}>login</button>
         <p class="text-muted-foreground text-xs">
           One moment while we load your alarms and assets.
         </p>
