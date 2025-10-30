@@ -169,7 +169,7 @@ class OpenRemoteService {
 
       console.log("Opening login URL:", loginUrl);
 
-      await Browser.open({ url: loginUrl });
+      await Browser.open({ url: loginUrl, windowName: "_self" });
 
       App.addListener("appUrlOpen", async (data) => {
         if (data.url.startsWith("openremote://auth-callback")) {
