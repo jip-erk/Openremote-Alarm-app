@@ -25,9 +25,14 @@
     relatedAlarms.filter((alarm) => alarm.status === AlarmStatus.IN_PROGRESS)
       .length
   );
+
+  const handleNavigate = () => {
+    openRemoteService.navigateToAsset(PageIndex.ASSET, asset);
+
+  };
 </script>
 
-<article
+<button type="button" onclick={handleNavigate}
   class="group border-border/50 hover:border-border flex flex-col gap-4 rounded-3xl border bg-[var(--surface-glass)]/80 p-5 shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:bg-[var(--surface-elevated)]/90"
 >
   <header class="flex items-start justify-between gap-3">
@@ -79,4 +84,4 @@
       </span>
     {/each}
   </div>
-</article>
+</button>

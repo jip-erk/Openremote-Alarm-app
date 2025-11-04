@@ -3,8 +3,9 @@
   import { appState, openRemoteService } from "$lib/store.svelte";
 
   const roles = $derived(appState.user?.roles?.get("openremote"));
+  const noHiddenPages = pages.filter(p => !p.hidden);
   const allowedPages = $derived(
-    pages.filter((page) => page.roles.some((role) => roles?.includes(role)))
+    noHiddenPages.filter((page) => page.roles.some((role) => roles?.includes(role)))
   );
 </script>
 

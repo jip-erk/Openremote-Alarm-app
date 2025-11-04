@@ -6,6 +6,8 @@ import type {
   SentAlarm,
   Alarm,
   UserAssetLink,
+  Asset,
+  UserAssetLinkId,
 } from "@openremote/model";
 import { pages } from "$lib/pages";
 
@@ -83,6 +85,8 @@ function resolveKeycloakUrl(managerUrl: string) {
 export const appState = $state({
   pageIndex: getStoredPageIndex(),
   selectedAlarm: null as SentAlarm | null,
+  selectedUserAssetLink: null as UserAssetLink | null,
+  selectedAsset: null as Asset | null,
   initialized: false,
   alarms: [] as SentAlarm[],
   assets: [] as UserAssetLink[],
@@ -217,6 +221,16 @@ class OpenRemoteService {
     }
   }
 
+  async getAsset(userAssetLinkId: UserAssetLinkId) {
+    try {
+      const response = await rest.api.AssetResource.get(userAssetLinkId.assetId!);
+      appState.selectedAsset = response.data;
+      console.log(appState.selectedAsset);
+    } catch (error) {
+      console.error("Failed to fetch asset:", error);
+    }
+  }
+
   async listAssignees() {
     try {
       const response = await rest.api.UserResource.query({
@@ -247,6 +261,23 @@ class OpenRemoteService {
       appState.selectedAlarm = alarm;
     } else {
       appState.selectedAlarm = null;
+    }
+  }
+
+    navigateToAsset(pageIndex: number, asset?: UserAssetLink) {
+    appState.selectedAlarm = null;
+    appState.selectedAsset = null;
+    appState.selectedUserAssetLink = null;
+    const page = pages.find((p) => p.index === pageIndex);
+    if (!page) return;
+    const roles = appState.user?.roles?.get("openremote");
+    if (!page.roles.some((r) => roles?.includes(r))) return;
+    appState.pageIndex = pageIndex;
+    savePageIndex(pageIndex);
+    if (asset) {
+      appState.selectedUserAssetLink = asset;
+    } else {
+      appState.selectedUserAssetLink = null;
     }
   }
 
