@@ -16,6 +16,7 @@ export type ThemePreference = ThemeMode | "system";
 
 const THEME_STORAGE_KEY = "or-theme";
 const DEFAULT_MANAGER_URL = "https://localhost";
+const SHOW_CONSOLE_ASSETS_KEY = "or-show-console-assets";
 
 interface User {
   id?: string;
@@ -35,6 +36,12 @@ function savePageIndex(index: number) {
   if (typeof window !== "undefined") {
     localStorage.setItem("pageIndex", index.toString());
   }
+}
+
+function getStoredShowConsoleAssets(): boolean {
+  if (typeof window === "undefined") return false;
+  const v = localStorage.getItem(SHOW_CONSOLE_ASSETS_KEY);
+  return v === "true";
 }
 
 function getStoredThemePreference(): ThemePreference {
@@ -90,6 +97,10 @@ export const appState = $state({
   initialized: false,
   alarms: [] as SentAlarm[],
   assets: [] as UserAssetLink[],
+  // Map of assetId -> true when the asset is of type ConsoleAsset
+  consoleAssetIds: {} as Record<string, boolean>,
+  // UI preference: hide console assets by default
+  showConsoleAssets: getStoredShowConsoleAssets(),
   assignees: [] as { value: string | null; label: string }[],
   user: null as User | null,
   themePreference: getStoredThemePreference(),
@@ -215,7 +226,39 @@ class OpenRemoteService {
   async fetchAssets() {
     try {
       const response = await rest.api.AssetResource.getUserAssetLinks();
-      appState.assets = response.data;
+      const links = response.data;
+      appState.assets = links;
+
+      // Enrich with actual asset type to detect ConsoleAsset and cache by id
+      const ids = links
+        .map((l) => l.id?.assetId)
+        .filter((id): id is string => typeof id === "string");
+
+      if (ids.length > 0) {
+        const results = await Promise.allSettled(
+          ids.map((id) => rest.api.AssetResource.get(id))
+        );
+
+        const map: Record<string, boolean> = {};
+        for (let i = 0; i < results.length; i++) {
+          const result = results[i];
+          const id = ids[i]!;
+          if (result.status === "fulfilled") {
+            const asset: any = result.value.data;
+            // Try multiple common locations for type name
+            const typeName =
+              asset?.type ||
+              asset?.typeName ||
+              asset?.assetType ||
+              asset?.assetType?.name ||
+              asset?.type?.name;
+            map[id] = typeof typeName === "string" && /ConsoleAsset$/i.test(typeName);
+          }
+        }
+        appState.consoleAssetIds = map;
+      } else {
+        appState.consoleAssetIds = {};
+      }
     } catch (error) {
       console.error("Failed to fetch assets:", error);
     }
@@ -300,8 +343,21 @@ class OpenRemoteService {
     appState.theme = resolveTheme(preference);
     applyThemeClass(appState.theme);
   }
+
+  setShowConsoleAssets(value: boolean) {
+    appState.showConsoleAssets = value;
+    if (typeof window !== "undefined") {
+      localStorage.setItem(SHOW_CONSOLE_ASSETS_KEY, String(value));
+    }
+  }
 }
 
 export const openRemoteService = new OpenRemoteService();
 
 openRemoteService.init();
+
+// Helper to check if a user asset link refers to a console asset
+export function isConsoleAssetLink(link?: UserAssetLink | null): boolean {
+  if (!link?.id?.assetId) return false;
+  return !!appState.consoleAssetIds[link.id.assetId];
+}
