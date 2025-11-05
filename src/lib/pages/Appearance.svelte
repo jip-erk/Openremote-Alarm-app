@@ -603,7 +603,7 @@
         <div class="flex items-center gap-2">
           <h3 class="text-foreground font-semibold">Colors</h3>
           <div
-            class="ml-2 border-border/60 flex items-center rounded-lg border bg-[var(--surface-glass)]/50 p-1 text-xs shadow-sm"
+            class="border-border/60 ml-2 flex items-center rounded-lg border bg-[var(--surface-glass)]/50 p-1 text-xs shadow-sm"
           >
             <button
               class={"rounded-md px-3 py-1 " +
