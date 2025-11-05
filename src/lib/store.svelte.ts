@@ -149,7 +149,12 @@ class OpenRemoteService {
           roles: openremote?.roles || new Map(),
         };
 
-        await Promise.all([this.fetchAlarms(), this.fetchAssets()]);
+        // Load all data required by initial views so labels (e.g., assignees) render correctly
+        await Promise.all([
+          this.fetchAlarms(),
+          this.fetchAssets(),
+          this.listAssignees(),
+        ]);
 
         openremote?.events?.subscribe<AlarmEvent>(
           { eventType: "alarm" },
