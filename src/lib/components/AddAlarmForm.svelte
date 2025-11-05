@@ -7,6 +7,7 @@
 
   const statuses = [
     AlarmStatus.OPEN,
+    AlarmStatus.IN_PROGRESS,
     AlarmStatus.ACKNOWLEDGED,
     AlarmStatus.RESOLVED,
     AlarmStatus.CLOSED,

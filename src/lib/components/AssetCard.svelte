@@ -28,12 +28,20 @@
 
   const handleNavigate = () => {
     openRemoteService.navigateToAsset(PageIndex.ASSET, asset);
-
   };
 </script>
 
-<button type="button" onclick={handleNavigate}
-  class="group border-border/50 hover:border-border flex flex-col gap-4 rounded-3xl border bg-[var(--surface-glass)]/80 p-5 shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:bg-[var(--surface-elevated)]/90"
+<div
+  role="button"
+  tabindex="0"
+  onclick={handleNavigate}
+  onkeydown={(e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleNavigate();
+    }
+  }}
+  class="group border-border/50 hover:border-border focus:ring-primary/40 flex flex-col gap-4 rounded-3xl border bg-[var(--surface-glass)]/80 p-5 shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:bg-[var(--surface-elevated)]/90 focus:ring-2 focus:outline-none"
 >
   <header class="flex items-start justify-between gap-3">
     <div class="flex items-center gap-3">
@@ -43,7 +51,7 @@
         <Box class="size-5" />
       </div>
       <div class="flex flex-col">
-        <span class="text-foreground text-sm font-semibold">
+        <span class="text-foreground text-left text-sm font-semibold">
           {asset.assetName}
         </span>
         <span class="text-muted-foreground text-xs">
@@ -71,7 +79,8 @@
         variant="outline"
         size="sm"
         class="border-border/60 text-foreground hover:border-primary/50 hover:bg-primary/10 rounded-full bg-transparent text-xs"
-        onclick={() => {
+        onclick={(e: MouseEvent) => {
+          e.stopPropagation();
           appState.selectedAlarm = alarm;
           openRemoteService.navigateTo(PageIndex.REPORT, alarm);
         }}
@@ -84,4 +93,4 @@
       </span>
     {/each}
   </div>
-</button>
+</div>
