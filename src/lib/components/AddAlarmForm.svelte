@@ -301,7 +301,7 @@
           <Button
             type="button"
             variant="outline"
-            class="text-destructive border-destructive/30 hover:text-destructive hover:border-destructive gap-2"
+            class="text-primary border-primary/30 hover:text-primary hover:border-primary gap-2"
             onclick={onRemove}
           >
             <Trash2 class="size-4" />

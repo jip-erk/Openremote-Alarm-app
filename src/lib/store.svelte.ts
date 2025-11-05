@@ -99,6 +99,8 @@ export const appState = $state({
   assets: [] as UserAssetLink[],
   // Map of assetId -> true when the asset is of type ConsoleAsset
   consoleAssetIds: {} as Record<string, boolean>,
+  // Map of assetId -> backend-reported type name/slug/class (used for icon mapping)
+  assetTypeById: {} as Record<string, string>,
   // UI preference: hide console assets by default
   showConsoleAssets: getStoredShowConsoleAssets(),
   assignees: [] as { value: string | null; label: string }[],
@@ -245,6 +247,7 @@ class OpenRemoteService {
         );
 
         const map: Record<string, boolean> = {};
+        const typeMap: Record<string, string> = {};
         for (let i = 0; i < results.length; i++) {
           const result = results[i];
           const id = ids[i]!;
@@ -259,11 +262,18 @@ class OpenRemoteService {
               asset?.type?.name;
             map[id] =
               typeof typeName === "string" && /ConsoleAsset$/i.test(typeName);
+            if (typeof typeName === "string") {
+              typeMap[id] = typeName;
+            } else if (typeof typeName?.toString === "function") {
+              typeMap[id] = String(typeName);
+            }
           }
         }
         appState.consoleAssetIds = map;
+        appState.assetTypeById = typeMap;
       } else {
         appState.consoleAssetIds = {};
+        appState.assetTypeById = {};
       }
     } catch (error) {
       console.error("Failed to fetch assets:", error);

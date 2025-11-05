@@ -13,7 +13,12 @@
   import { PageIndex } from "$lib/pages";
   import { appState, openRemoteService } from "$lib/store.svelte";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
-  import Box from "@lucide/svelte/icons/box";
+  import {
+    getTypeInfoByKey,
+    resolveTypeKeyFromAsset,
+    resolveTypeKeyFromLink,
+    type OrAssetLike,
+  } from "$lib/asset-types";
   import dayjs from "dayjs";
   import relativeTime from "dayjs/plugin/relativeTime";
   import { AlarmStatus } from "@openremote/model";
@@ -94,6 +99,34 @@
   const hasLink = $derived(!!appState.selectedUserAssetLink?.id?.assetId);
   const hasAsset = $derived(!!appState.selectedAsset);
 
+  // Icon and color per asset type
+  const typeKeyFromAsset = $derived(
+    resolveTypeKeyFromAsset(appState.selectedAsset as unknown as OrAssetLike)
+  );
+  const typeKeyFallbackFromLink = $derived(
+    resolveTypeKeyFromLink(
+      appState.selectedUserAssetLink,
+      !!appState.selectedUserAssetLink &&
+        appState.selectedUserAssetLink.id?.assetId
+        ? !!appState.consoleAssetIds[appState.selectedUserAssetLink.id.assetId]
+        : false
+    )
+  );
+  const effectiveTypeKey = $derived(
+    typeKeyFromAsset !== "unknown" ? typeKeyFromAsset : typeKeyFallbackFromLink
+  );
+  const typeInfo = $derived(getTypeInfoByKey(effectiveTypeKey));
+
+  // Lighter header background derived from the type color to improve readability
+  const headerBg = $derived(() => {
+    const base = typeInfo.colorClasses?.bg ?? "bg-primary/10";
+    // Prefer a lighter fraction if present; /20 -> /10, /10 -> /5
+    if (base.includes("/20")) return base.replace("/20", "/10");
+    if (base.includes("/15")) return base.replace("/15", "/10");
+    if (base.includes("/10")) return base.replace("/10", "/5");
+    return base;
+  });
+
   // Filter controls for linked alarms (reused from Alarms page)
   const statusFilters = [
     { label: "All", value: "all" },
@@ -138,13 +171,15 @@
     </div>
   {/if}
 
-  <Card class="border-border/50 border bg-[var(--surface-elevated)]/50">
+  <Card
+    class={`border-border/50 border ${headerBg} dark:bg-[var(--surface-elevated)]/50`}
+  >
     <CardHeader>
       <div class="flex items-start gap-3">
         <div
-          class="bg-primary/10 text-primary flex size-11 items-center justify-center rounded-2xl"
+          class={`flex size-11 items-center justify-center rounded-2xl ${typeInfo.colorClasses?.bg ?? "bg-primary/10"} ${typeInfo.colorClasses?.text ?? "text-primary"}`}
         >
-          <Box class="size-5" />
+          <typeInfo.icon class="size-5" />
         </div>
         <div class="flex flex-col">
           <h3 class="text-foreground text-xl font-semibold">
@@ -163,11 +198,13 @@
       </div>
     </CardHeader>
     <CardContent>
-      <div class="text-muted-foreground flex flex-wrap gap-3 text-xs">
-        <span class="rounded-full bg-[var(--surface-elevated)] px-3 py-1"
+      <div class="flex flex-wrap gap-3 text-xs">
+        <span
+          class={`rounded-full px-3 py-1 ${typeInfo.colorClasses?.bg ?? "bg-primary/10"} ${typeInfo.colorClasses?.text ?? "text-primary"}`}
           >{openCount} open</span
         >
-        <span class="rounded-full bg-[var(--surface-elevated)] px-3 py-1"
+        <span
+          class={`rounded-full px-3 py-1 ${typeInfo.colorClasses?.bg ?? "bg-primary/10"} ${typeInfo.colorClasses?.text ?? "text-primary"}`}
           >{inProgressCount} in progress</span
         >
       </div>
