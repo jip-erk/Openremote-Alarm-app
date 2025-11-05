@@ -2,17 +2,18 @@ import AlarmForm from "./AlarmForm.svelte";
 import AlarmList from "./AlarmList.svelte";
 import AssetList from "./AssetList.svelte";
 import AssetForm from "./AssetForm.svelte";
+import Appearance from "./Appearance.svelte";
 
 import NotificationsRounded from "@iconify-svelte/material-symbols/notifications-rounded";
 import LabProfileRounded from "@iconify-svelte/material-symbols/lab-profile-rounded";
 import DeviceHubRounded from "@iconify-svelte/material-symbols/device-hub-rounded";
-
 
 export enum PageIndex {
   ALARMS,
   REPORT,
   ASSETS,
   ASSET,
+  APPEARANCE,
 }
 
 // export enum HiddenPageIndex {
@@ -51,12 +52,20 @@ export const pages = [
     component: AssetList,
     roles: ["read:assets"],
   },
-    {
+  {
     title: "Asset",
     index: PageIndex.ASSET,
     icon: DeviceHubRounded,
     component: AssetForm,
     roles: ["read:assets"],
+    hidden: true,
+  },
+  {
+    title: "Appearance",
+    index: PageIndex.APPEARANCE,
+    icon: DeviceHubRounded,
+    component: Appearance,
+    roles: ["read:assets", "read:alarms"],
     hidden: true,
   },
 ];

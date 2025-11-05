@@ -62,6 +62,70 @@
   })}`;
 
   const isAlarmsView = $derived(appState.pageIndex === PageIndex.ALARMS);
+
+  // Determine if there are any custom colors applied
+  const isDefaultAppearance = $derived(
+    Object.keys(appState.appearance.colors || {}).length === 0 &&
+      Object.keys(appState.appearance.darkColors || {}).length === 0
+  );
+  const isDarkTheme = $derived(appState.theme === "dark");
+  // Compute the final hero background image, preserving exact default when primary is default
+  const defaultPrimaryLight = "oklch(0.69 0.15 136)";
+  const defaultPrimaryDark = "oklch(0.7 0.12 139)";
+  let heroBg = $state("");
+
+  function makeAdaptive(light: boolean) {
+    if (light) {
+      const start =
+        "color-mix(in oklab, var(--primary) 18%, var(--background) 82%)";
+      const mid =
+        "color-mix(in oklab, var(--primary) 28%, var(--background) 72%)";
+      const end = "color-mix(in oklab, var(--primary) 34%, transparent)";
+      return `linear-gradient(135deg, ${start}, ${mid}, ${end})`;
+    } else {
+      const start =
+        "color-mix(in oklab, var(--primary) 26%, var(--background) 74%)";
+      const mid =
+        "color-mix(in oklab, var(--primary) 20%, var(--background) 80%)";
+      const end = "color-mix(in oklab, var(--primary) 28%, transparent)";
+      return `linear-gradient(135deg, ${start}, ${mid}, ${end})`;
+    }
+  }
+
+  $effect(() => {
+    if (typeof document === "undefined") return;
+    // Track appearance changes explicitly so we recompute when user applies new colors
+    const _dep = isDarkTheme
+      ? appState.appearance.darkColors
+      : appState.appearance.colors;
+    const root = document.documentElement;
+    const primary = getComputedStyle(root).getPropertyValue("--primary").trim();
+    const isDefault = isDarkTheme
+      ? primary === defaultPrimaryDark
+      : primary === defaultPrimaryLight;
+    if (isDefault) {
+      heroBg = isDarkTheme
+        ? "linear-gradient(90deg, var(--gradient-start), var(--gradient-end))"
+        : "linear-gradient(90deg, var(--surface-highlight), rgba(34,197,94,0.12))";
+    } else {
+      // Use left(darker) -> right(lighter)
+      if (!isDarkTheme) {
+        const start =
+          "color-mix(in oklab, var(--primary) 34%, var(--background) 66%)";
+        const mid =
+          "color-mix(in oklab, var(--primary) 22%, var(--background) 78%)";
+        const end = "color-mix(in oklab, var(--primary) 8%, transparent)";
+        heroBg = `linear-gradient(90deg, ${start}, ${mid}, ${end})`;
+      } else {
+        const start =
+          "color-mix(in oklab, var(--primary) 28%, var(--background) 72%)";
+        const mid =
+          "color-mix(in oklab, var(--primary) 18%, var(--background) 82%)";
+        const end = "color-mix(in oklab, var(--primary) 8%, transparent)";
+        heroBg = `linear-gradient(90deg, ${start}, ${mid}, ${end})`;
+      }
+    }
+  });
 </script>
 
 <header class="flex flex-col gap-6">
@@ -70,7 +134,18 @@
       <div
         class="border-primary/40 text-primary dark:border-primary/30 flex size-12 items-center justify-center rounded-2xl border bg-[var(--surface-elevated)]/90 shadow-sm ring-1 ring-white/40 ring-inset dark:bg-[var(--surface-elevated)]/70 dark:shadow-[var(--shadow-soft)] dark:ring-white/10"
       >
-        <img src={logo} alt="OpenRemote" class="h-8 w-auto" />
+        {#if appState.appearance.logoMobileUrl}
+          <img
+            src={appState.appearance.logoMobileUrl}
+            alt="OpenRemote"
+            class="h-8 w-auto sm:hidden"
+          />
+        {/if}
+        <img
+          src={appState.appearance.logoUrl || logo}
+          alt="OpenRemote"
+          class="hidden h-8 w-auto sm:block"
+        />
       </div>
       <div class="flex flex-col">
         <span class="text-muted-foreground text-xs tracking-[0.3em] uppercase"
@@ -100,6 +175,12 @@
           <DropdownMenu.Group>
             <DropdownMenu.Label>{userName}</DropdownMenu.Label>
             <DropdownMenu.Separator />
+            <DropdownMenu.Item
+              onclick={() => openRemoteService.navigateTo(PageIndex.APPEARANCE)}
+            >
+              Appearance
+            </DropdownMenu.Item>
+            <DropdownMenu.Separator />
             <DropdownMenu.Item onclick={() => openRemoteService.logout()}>
               Logout
             </DropdownMenu.Item>
@@ -111,7 +192,8 @@
 
   {#if isAlarmsView}
     <section
-      class="border-border/40 text-foreground relative overflow-hidden rounded-4xl border bg-[linear-gradient(135deg,var(--surface-highlight),rgba(34,197,94,0.12))] px-6 py-7 shadow-[var(--shadow-soft)] transition-colors dark:bg-[linear-gradient(135deg,var(--gradient-start),var(--gradient-end))]"
+      class="border-border/40 text-foreground relative overflow-hidden rounded-4xl border px-6 py-7 shadow-[var(--shadow-soft)] transition-colors"
+      style={`background-image: ${heroBg};`}
     >
       <div class="absolute inset-0 -z-10 opacity-20">
         <div

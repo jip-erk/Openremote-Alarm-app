@@ -91,6 +91,8 @@ function resolveKeycloakUrl(managerUrl: string) {
 
 export const appState = $state({
   pageIndex: getStoredPageIndex(),
+  // Track last visited page to enable contextual "Back to <page>" actions
+  lastPageIndex: undefined as number | undefined,
   selectedAlarm: null as SentAlarm | null,
   selectedUserAssetLink: null as UserAssetLink | null,
   selectedAsset: null as Asset | null,
@@ -107,6 +109,26 @@ export const appState = $state({
   user: null as User | null,
   themePreference: getStoredThemePreference(),
   theme: resolveTheme(getStoredThemePreference()),
+  // Appearance customization (persisted per-user locally)
+  appearance: {
+    title: undefined as string | undefined,
+    logoUrl: undefined as string | undefined,
+    logoMobileUrl: undefined as string | undefined,
+    faviconUrl: undefined as string | undefined,
+    colors: {} as Record<string, string>,
+    darkColors: {} as Record<string, string>,
+  },
+  appearancePresets: [] as {
+    name: string;
+    appearance: {
+      title?: string;
+      logoUrl?: string;
+      logoMobileUrl?: string;
+      faviconUrl?: string;
+      colors: Record<string, string>;
+      darkColors?: Record<string, string>;
+    };
+  }[],
 });
 
 if (typeof window !== "undefined") {
@@ -157,6 +179,9 @@ class OpenRemoteService {
           this.fetchAssets(),
           this.listAssignees(),
         ]);
+
+        // Load persisted appearance for this user and apply
+        this.loadAppearance();
 
         openremote?.events?.subscribe<AlarmEvent>(
           { eventType: "alarm" },
@@ -312,6 +337,8 @@ class OpenRemoteService {
 
   navigateTo(pageIndex: number, alarm?: SentAlarm) {
     appState.selectedAlarm = null;
+    // Remember where we came from for back-navigation on hidden pages
+    appState.lastPageIndex = appState.pageIndex;
     const page = pages.find((p) => p.index === pageIndex);
     if (!page) return;
     const roles = appState.user?.roles?.get("openremote");
@@ -329,6 +356,8 @@ class OpenRemoteService {
     appState.selectedAlarm = null;
     appState.selectedAsset = null;
     appState.selectedUserAssetLink = null;
+    // Remember where we came from for back-navigation on hidden pages
+    appState.lastPageIndex = appState.pageIndex;
     const page = pages.find((p) => p.index === pageIndex);
     if (!page) return;
     const roles = appState.user?.roles?.get("openremote");
@@ -367,6 +396,297 @@ class OpenRemoteService {
     if (typeof window !== "undefined") {
       localStorage.setItem(SHOW_CONSOLE_ASSETS_KEY, String(value));
     }
+  }
+
+  // --- Appearance management ---
+  private getAppearanceStorageKey() {
+    const userKey = appState.user?.id || appState.user?.username || "anon";
+    return `or-appearance-${userKey}`;
+  }
+  private getAppearancePresetsKey() {
+    const userKey = appState.user?.id || appState.user?.username || "anon";
+    return `or-appearance-presets-${userKey}`;
+  }
+
+  private defaultTitle =
+    typeof document !== "undefined" ? document.title : "openremote-alarm";
+  private defaultFavicon =
+    typeof document !== "undefined"
+      ? document.querySelector<HTMLLinkElement>('link[rel="icon"]')?.href ||
+        "/vite.svg"
+      : "/vite.svg";
+
+  private applyFavicon(href?: string) {
+    if (typeof document === "undefined") return;
+    let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.href = href && href.trim().length > 0 ? href : this.defaultFavicon;
+  }
+
+  private applyColors(
+    light?: Record<string, string>,
+    dark?: Record<string, string>
+  ) {
+    if (typeof document === "undefined") return;
+    // Remove any inline overrides for keys we are about to set via stylesheet so dark/light can differ
+    const root = document.documentElement;
+    const allKeys = new Set<string>([
+      ...Object.keys(light || {}),
+      ...Object.keys(dark || {}),
+    ]);
+    allKeys.forEach((k) => root.style.removeProperty(`--${k}`));
+
+    const styleId = "appearance-color-overrides";
+    let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (!styleEl) {
+      styleEl = document.createElement("style");
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
+    }
+    let css = "";
+    // Important: Scope light overrides to html:not(.dark) so they never leak into dark mode.
+    if (light && Object.keys(light).length > 0) {
+      css +=
+        "html:not(.dark){" +
+        Object.entries(light)
+          .map(([k, v]) => `--${k}:${v};`)
+          .join("") +
+        "}";
+    }
+    if (dark && Object.keys(dark).length > 0) {
+      css +=
+        ".dark{" +
+        Object.entries(dark)
+          .map(([k, v]) => `--${k}:${v};`)
+          .join("") +
+        "}";
+    }
+    styleEl.textContent = css;
+    if (!css) {
+      styleEl.remove();
+    }
+  }
+
+  loadAppearance() {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = localStorage.getItem(this.getAppearanceStorageKey());
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        appState.appearance = {
+          title: parsed.title,
+          logoUrl: parsed.logoUrl,
+          logoMobileUrl: parsed.logoMobileUrl,
+          faviconUrl: parsed.faviconUrl,
+          colors: parsed.colors || {},
+          darkColors: parsed.darkColors || {},
+        };
+      }
+      const presetsStr = localStorage.getItem(this.getAppearancePresetsKey());
+      if (presetsStr) {
+        appState.appearancePresets = JSON.parse(presetsStr);
+      }
+      // Apply to DOM
+      if (appState.appearance.title) document.title = appState.appearance.title;
+      this.applyFavicon(appState.appearance.faviconUrl);
+      this.applyColors(
+        appState.appearance.colors,
+        appState.appearance.darkColors
+      );
+    } catch (e) {
+      console.warn("Failed to load appearance", e);
+    }
+  }
+
+  private persistAppearance() {
+    if (typeof window === "undefined") return;
+    const key = this.getAppearanceStorageKey();
+    localStorage.setItem(key, JSON.stringify(appState.appearance));
+  }
+
+  private persistPresets() {
+    if (typeof window === "undefined") return;
+    const key = this.getAppearancePresetsKey();
+    localStorage.setItem(key, JSON.stringify(appState.appearancePresets));
+  }
+
+  setAppearance(partial: {
+    title?: string;
+    logoUrl?: string;
+    logoMobileUrl?: string;
+    faviconUrl?: string;
+    colors?: Record<string, string>;
+    darkColors?: Record<string, string>;
+  }) {
+    // Merge and apply
+    appState.appearance = {
+      ...appState.appearance,
+      ...partial,
+      colors: {
+        ...(appState.appearance.colors || {}),
+        ...(partial.colors || {}),
+      },
+      darkColors: {
+        ...(appState.appearance.darkColors || {}),
+        ...(partial.darkColors || {}),
+      },
+    };
+    if (partial.title !== undefined)
+      document.title = partial.title || this.defaultTitle;
+    if (partial.faviconUrl !== undefined) this.applyFavicon(partial.faviconUrl);
+    if (partial.colors || partial.darkColors)
+      this.applyColors(
+        appState.appearance.colors,
+        appState.appearance.darkColors
+      );
+    this.persistAppearance();
+  }
+
+  resetAppearance() {
+    // Clear local overrides
+    appState.appearance = {
+      title: undefined,
+      logoUrl: undefined,
+      logoMobileUrl: undefined,
+      faviconUrl: undefined,
+      colors: {},
+      darkColors: {},
+    };
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(this.getAppearanceStorageKey());
+    }
+    // Re-apply defaults
+    if (typeof document !== "undefined") {
+      document.title = this.defaultTitle;
+      this.applyFavicon(undefined);
+      // Clear inline custom properties we know about
+      const keys = [
+        "primary",
+        "primary-foreground",
+        "background",
+        "foreground",
+        "border",
+        "input",
+        "ring",
+        "muted",
+        "muted-foreground",
+        "accent",
+        "destructive",
+        "surface-elevated",
+        "surface-glass",
+        "surface-highlight",
+        "popover",
+        "popover-foreground",
+      ];
+      const root = document.documentElement;
+      keys.forEach((k) => root.style.removeProperty(`--${k}`));
+      // Remove style tag
+      const styleEl = document.getElementById("appearance-color-overrides");
+      styleEl?.parentElement?.removeChild(styleEl);
+    }
+  }
+
+  // Scoped branding update/reset
+  setBranding(partial: {
+    title?: string;
+    logoUrl?: string;
+    logoMobileUrl?: string;
+    faviconUrl?: string;
+  }) {
+    appState.appearance = { ...appState.appearance, ...partial };
+    if (partial.title !== undefined)
+      document.title = partial.title || this.defaultTitle;
+    if (partial.faviconUrl !== undefined) this.applyFavicon(partial.faviconUrl);
+    this.persistAppearance();
+  }
+
+  resetBranding() {
+    appState.appearance.title = undefined;
+    appState.appearance.logoUrl = undefined;
+    appState.appearance.logoMobileUrl = undefined;
+    appState.appearance.faviconUrl = undefined;
+    if (typeof document !== "undefined") {
+      document.title = this.defaultTitle;
+      this.applyFavicon(undefined);
+    }
+    this.persistAppearance();
+  }
+
+  // Scoped color reset
+  resetColors() {
+    appState.appearance.colors = {};
+    appState.appearance.darkColors = {};
+    if (typeof document !== "undefined") {
+      const keys = [
+        "primary",
+        "primary-foreground",
+        "background",
+        "foreground",
+        "border",
+        "input",
+        "ring",
+        "muted",
+        "muted-foreground",
+        "accent",
+        "destructive",
+        "surface-elevated",
+        "surface-glass",
+        "surface-highlight",
+        "popover",
+        "popover-foreground",
+      ];
+      const root = document.documentElement;
+      keys.forEach((k) => root.style.removeProperty(`--${k}`));
+      const styleEl = document.getElementById("appearance-color-overrides");
+      styleEl?.parentElement?.removeChild(styleEl);
+    }
+    this.persistAppearance();
+  }
+
+  // Reset only the selected theme colors (light or dark)
+  resetThemeColors(theme: "light" | "dark") {
+    if (theme === "light") {
+      appState.appearance.colors = {};
+    } else {
+      appState.appearance.darkColors = {};
+    }
+    if (typeof document !== "undefined") {
+      this.applyColors(
+        appState.appearance.colors,
+        appState.appearance.darkColors
+      );
+    }
+    this.persistAppearance();
+  }
+
+  saveAppearancePreset(name: string) {
+    const existingIdx = appState.appearancePresets.findIndex(
+      (p) => p.name === name
+    );
+    const snapshot = JSON.parse(JSON.stringify(appState.appearance));
+    if (existingIdx >= 0) {
+      appState.appearancePresets[existingIdx] = { name, appearance: snapshot };
+    } else {
+      appState.appearancePresets.push({ name, appearance: snapshot });
+    }
+    this.persistPresets();
+  }
+
+  applyAppearancePreset(name: string) {
+    const found = appState.appearancePresets.find((p) => p.name === name);
+    if (!found) return;
+    this.setAppearance(found.appearance);
+  }
+
+  deleteAppearancePreset(name: string) {
+    appState.appearancePresets = appState.appearancePresets.filter(
+      (p) => p.name !== name
+    );
+    this.persistPresets();
   }
 }
 
