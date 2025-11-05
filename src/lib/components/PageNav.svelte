@@ -1,11 +1,13 @@
 <script lang="ts">
-  import { pages } from "$lib/pages";
+  import { pages, PageIndex } from "$lib/pages";
   import { appState, openRemoteService } from "$lib/store.svelte";
 
   const roles = $derived(appState.user?.roles?.get("openremote"));
-  const noHiddenPages = pages.filter(p => !p.hidden);
+  const noHiddenPages = pages.filter((p) => !p.hidden);
   const allowedPages = $derived(
-    noHiddenPages.filter((page) => page.roles.some((role) => roles?.includes(role)))
+    noHiddenPages.filter((page) =>
+      page.roles.some((role) => roles?.includes(role))
+    )
   );
 </script>
 
@@ -18,7 +20,11 @@
   >
     {#each allowedPages as page (page.title)}
       {#if page}
-        {@const isActive = page.index === appState.pageIndex}
+        {@const activeIndex =
+          appState.pageIndex === PageIndex.ASSET
+            ? PageIndex.ASSETS
+            : appState.pageIndex}
+        {@const isActive = page.index === activeIndex}
         <button
           class={`focus-visible:ring-ring flex flex-1 flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-medium transition focus-visible:ring-2 focus-visible:outline-none ${
             isActive
