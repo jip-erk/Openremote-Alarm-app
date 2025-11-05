@@ -3,7 +3,11 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
   import { PageIndex } from "$lib/pages";
-  import { openRemoteService, appState, isConsoleAssetLink } from "$lib/store.svelte";
+  import {
+    openRemoteService,
+    appState,
+    isConsoleAssetLink,
+  } from "$lib/store.svelte";
   import AssetCard from "$lib/components/AssetCard.svelte";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
 
@@ -31,13 +35,16 @@
   </div>
 
   <header class="flex flex-col gap-2">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
       <div>
         <h2 class="text-foreground text-lg font-semibold tracking-tight">
           Connected assets
         </h2>
         <p class="text-muted-foreground text-sm">
-          Monitor assets linked to your realm and jump into their associated alarms.
+          Monitor assets linked to your realm and jump into their associated
+          alarms.
         </p>
       </div>
       <div class="flex items-center gap-3 sm:self-end">
@@ -45,7 +52,10 @@
           checked={appState.showConsoleAssets}
           on:change={(e) => openRemoteService.setShowConsoleAssets(e.detail)}
         >
-          <span class="text-sm text-muted-foreground" class:text-primary={appState.showConsoleAssets}>
+          <span
+            class="text-muted-foreground text-sm"
+            class:text-primary={appState.showConsoleAssets}
+          >
             Show console assets
           </span>
         </Checkbox>

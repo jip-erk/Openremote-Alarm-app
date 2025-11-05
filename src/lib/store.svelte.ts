@@ -252,7 +252,8 @@ class OpenRemoteService {
               asset?.assetType ||
               asset?.assetType?.name ||
               asset?.type?.name;
-            map[id] = typeof typeName === "string" && /ConsoleAsset$/i.test(typeName);
+            map[id] =
+              typeof typeName === "string" && /ConsoleAsset$/i.test(typeName);
           }
         }
         appState.consoleAssetIds = map;
@@ -266,7 +267,9 @@ class OpenRemoteService {
 
   async getAsset(userAssetLinkId: UserAssetLinkId) {
     try {
-      const response = await rest.api.AssetResource.get(userAssetLinkId.assetId!);
+      const response = await rest.api.AssetResource.get(
+        userAssetLinkId.assetId!
+      );
       appState.selectedAsset = response.data;
       console.log(appState.selectedAsset);
     } catch (error) {
@@ -307,7 +310,7 @@ class OpenRemoteService {
     }
   }
 
-    navigateToAsset(pageIndex: number, asset?: UserAssetLink) {
+  navigateToAsset(pageIndex: number, asset?: UserAssetLink) {
     appState.selectedAlarm = null;
     appState.selectedAsset = null;
     appState.selectedUserAssetLink = null;

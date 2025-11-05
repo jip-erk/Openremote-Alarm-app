@@ -17,7 +17,11 @@
   import type { Alarm } from "@openremote/model";
   import { AlarmSeverity, AlarmStatus, AlarmSource } from "@openremote/model";
   import type { SentAlarm } from "@openremote/model";
-  import { appState, openRemoteService, isConsoleAssetLink } from "$lib/store.svelte";
+  import {
+    appState,
+    openRemoteService,
+    isConsoleAssetLink,
+  } from "$lib/store.svelte";
   import * as Select from "$lib/components/ui/select/index.js";
   import {
     Card,

@@ -3,7 +3,12 @@
   import Check from "@lucide/svelte/icons/check";
   import X from "@lucide/svelte/icons/x";
 
-  const { checked = false, disabled = false, id, children } = $props<{
+  const {
+    checked = false,
+    disabled = false,
+    id,
+    children,
+  } = $props<{
     checked?: boolean;
     disabled?: boolean;
     id?: string;
@@ -20,21 +25,21 @@
 
 <label class="inline-flex items-center gap-2 select-none">
   <input
-    id={id}
+    {id}
     type="checkbox"
     class="peer sr-only"
-    checked={checked}
-    disabled={disabled}
+    {checked}
+    {disabled}
     onchange={handleChange}
   />
   <span
-    class="inline-flex h-5 w-5 items-center justify-center rounded-md border border-border/60 bg-[var(--surface-elevated)]/70 transition-colors peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 peer-checked:border-primary peer-checked:bg-primary disabled:opacity-60"
+    class="border-border/60 peer-focus-visible:ring-primary/40 peer-checked:border-primary peer-checked:bg-primary inline-flex h-5 w-5 items-center justify-center rounded-md border bg-[var(--surface-elevated)]/70 transition-colors peer-focus-visible:ring-2 peer-focus-visible:outline-none disabled:opacity-60"
     aria-hidden="true"
   >
     {#if checked}
       <Check class="h-3.5 w-3.5 text-white" />
     {:else}
-      <X class="h-3.5 w-3.5 text-muted-foreground" />
+      <X class="text-muted-foreground h-3.5 w-3.5" />
     {/if}
   </span>
   {@render children?.()}
