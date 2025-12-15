@@ -18,8 +18,16 @@ vi.mock("$lib/store.svelte", () => {
     openRemoteService: {
       getAsset: vi.fn(),
       navigateTo: vi.fn(),
+      listAssignees: vi.fn(),
     },
     resolveManagerBaseUrl: vi.fn().mockReturnValue("http://localhost:8080"),
+  };
+});
+
+// Mock LocationCard to avoid Leaflet initialization
+vi.mock("$lib/components/LocationCard.svelte", () => {
+  return {
+    default: vi.fn(),
   };
 });
 

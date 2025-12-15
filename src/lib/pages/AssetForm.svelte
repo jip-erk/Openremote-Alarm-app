@@ -18,6 +18,10 @@
   } from "$lib/store.svelte";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
   import ExternalLink from "@lucide/svelte/icons/external-link";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+  import ChevronDown from "@lucide/svelte/icons/chevron-down";
+  import User from "@lucide/svelte/icons/user";
+  import LocationCard from "$lib/components/LocationCard.svelte";
   import {
     getTypeInfoByKey,
     resolveTypeKeyFromAsset,
@@ -34,6 +38,7 @@
     if (appState.selectedUserAssetLink) {
       openRemoteService.getAsset(appState.selectedUserAssetLink.id!);
     }
+    openRemoteService.listAssignees();
   });
 
   const handleBack = () => {
@@ -88,6 +93,26 @@
   const normalizedAttributes = $derived(
     normalizeAttributes(appState.selectedAsset as any)
   );
+
+  const assetLocation = $derived.by(() => {
+    const asset = appState.selectedAsset as any;
+    if (!asset) return undefined;
+
+    // Check for direct location field (GeoJSON Point)
+    // Structure: { value: { coordinates: [lng, lat], type: 'Point' } }
+    const locValue = asset.location?.value || asset.attributes?.location?.value;
+
+    if (
+      locValue?.coordinates &&
+      Array.isArray(locValue.coordinates) &&
+      locValue.coordinates.length === 2
+    ) {
+      const [lng, lat] = locValue.coordinates;
+      return { lat, lng };
+    }
+
+    return undefined;
+  });
 
   function valueToString(attr: any): string {
     // Common fields where OR might keep the actual value
@@ -152,10 +177,26 @@
 
   type FilterValue = (typeof statusFilters)[number]["value"];
   let alarmFilter = $state<FilterValue>("all");
+  let assigneeFilter = $state<string>("all");
+
   const visibleRelatedAlarms = $derived(
-    alarmFilter === "all"
+    (alarmFilter === "all"
       ? relatedAlarms
       : relatedAlarms.filter((a) => a.status === alarmFilter)
+    ).filter((alarm) => {
+      if (assigneeFilter === "all") return true;
+      if (assigneeFilter === "unassigned") return !alarm.assigneeId;
+      return alarm.assigneeId === assigneeFilter;
+    })
+  );
+
+  const selectedAssigneeLabel = $derived(
+    assigneeFilter === "all"
+      ? "Assignee"
+      : assigneeFilter === "unassigned"
+        ? "Unassigned"
+        : appState.assignees.find((a) => a.value === assigneeFilter)?.label ||
+          "Unknown"
   );
 </script>
 
@@ -249,7 +290,7 @@
     </header>
 
     <Card class="border-border/50 border bg-[var(--surface-glass)]/50">
-      <CardContent class="space-y-4 pt-6">
+      <CardContent class="space-y-4">
         <div class="grid gap-4 sm:grid-cols-2">
           <!-- Synthetic meta fields moved into Attributes -->
           <div class="space-y-1">
@@ -302,6 +343,18 @@
     </Card>
   </section>
 
+  <!-- ============================== -->
+  <!-- ASSET LOCATION (Real or Mock)  -->
+  <!-- ============================== -->
+  <section class="space-y-4">
+    <LocationCard
+      entityId={appState.selectedUserAssetLink?.id?.assetId ??
+        appState.selectedAsset?.id}
+      entityType="asset"
+      fixedLocation={assetLocation}
+    />
+  </section>
+
   <!-- Linked alarms section with filters -->
   <section class="space-y-5">
     <header
@@ -327,6 +380,37 @@
             {option.label}
           </Button>
         {/each}
+
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger
+            class={`focus-visible:ring-ring inline-flex h-9 items-center justify-center gap-2 rounded-full border px-3 text-xs font-medium whitespace-nowrap transition-colors focus-visible:ring-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${
+              assigneeFilter !== "all"
+                ? "bg-accent text-accent-foreground hover:bg-accent/90 border-transparent"
+                : "text-muted-foreground border-border/60 bg-transparent hover:bg-[var(--surface-elevated)]"
+            }`}
+          >
+            <User class="size-3.5" />
+            {selectedAssigneeLabel}
+            <ChevronDown class="size-3.5 opacity-50" />
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content align="end" class="w-56">
+            <DropdownMenu.Label>Filter by assignee</DropdownMenu.Label>
+            <DropdownMenu.Separator />
+            <DropdownMenu.RadioGroup bind:value={assigneeFilter}>
+              <DropdownMenu.RadioItem value="all">All</DropdownMenu.RadioItem>
+              <DropdownMenu.RadioItem value="unassigned">
+                No assignee
+              </DropdownMenu.RadioItem>
+              {#each appState.assignees as assignee (assignee.value)}
+                {#if assignee.value}
+                  <DropdownMenu.RadioItem value={assignee.value}>
+                    {assignee.label}
+                  </DropdownMenu.RadioItem>
+                {/if}
+              {/each}
+            </DropdownMenu.RadioGroup>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
       </div>
     </header>
 

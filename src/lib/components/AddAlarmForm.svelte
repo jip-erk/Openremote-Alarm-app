@@ -41,6 +41,11 @@
     severityBadgeClass,
     statusBadgeClass,
   } from "$lib/utils.js";
+  import { onDestroy } from "svelte";
+  import { mockStorage } from "$lib/services/mock-storage.service";
+  import MockImageGalleryCard from "$lib/components/mock/MockImageGalleryCard.svelte";
+  import MockVoiceRecordCard from "$lib/components/mock/MockVoiceRecordCard.svelte";
+  import LocationCard from "$lib/components/LocationCard.svelte";
 
   const { currentAlarm, onRemove } = $props<{
     currentAlarm?: SentAlarm;
@@ -94,6 +99,18 @@
   const canSubmit = $derived(() => (alarm.title ?? "").trim().length > 0);
 
   let submitting = $state(false);
+  let galleryComponent: { save: () => void } | undefined = $state();
+  let voiceComponent: { save: () => void } | undefined = $state();
+  let locationComponent: { save: () => void } | undefined = $state();
+
+  onDestroy(() => {
+    // Clear draft mock data when leaving the form if we were in create mode
+    if (!currentAlarm) {
+      mockStorage.remove("mock:alarm:draft:recordings");
+      mockStorage.remove("mock:alarm:draft:gallery");
+      mockStorage.remove("mock:alarm:draft:location");
+    }
+  });
 
   const handleSubmit = async (event?: SubmitEvent) => {
     event?.preventDefault();
@@ -107,8 +124,42 @@
         };
 
         await openRemoteService.updateAlarm(currentAlarm.id, sentAlarm);
+
+        // Save mock data explicitly for existing alarms
+        galleryComponent?.save();
+        voiceComponent?.save();
+        locationComponent?.save();
       } else {
-        await openRemoteService.addAlarm(alarm, linkedAssets);
+        const createdAlarm = await openRemoteService.addAlarm(
+          alarm,
+          linkedAssets
+        );
+
+        // Migrate mock data from draft to new alarm
+        if (createdAlarm && createdAlarm.id) {
+          const newId = createdAlarm.id;
+
+          // Migrate Recordings
+          const recordings = mockStorage.get(`mock:alarm:draft:recordings`);
+          if (recordings) {
+            mockStorage.set(`mock:alarm:${newId}:recordings`, recordings);
+            mockStorage.remove(`mock:alarm:draft:recordings`);
+          }
+
+          // Migrate Gallery
+          const gallery = mockStorage.get(`mock:alarm:draft:gallery`);
+          if (gallery) {
+            mockStorage.set(`mock:alarm:${newId}:gallery`, gallery);
+            mockStorage.remove(`mock:alarm:draft:gallery`);
+          }
+
+          // Migrate Location
+          const location = mockStorage.get(`mock:alarm:draft:location`);
+          if (location) {
+            mockStorage.set(`mock:alarm:${newId}:location`, location);
+            mockStorage.remove(`mock:alarm:draft:location`);
+          }
+        }
       }
       openRemoteService.navigateTo(0);
     } finally {
@@ -286,6 +337,27 @@
             </Select.Content>
           </Select.Root>
         </div>
+      </div>
+    </div>
+
+    <!-- ============================== -->
+    <!-- MOCK ONLY - FEATURES SECTION   -->
+    <!-- ============================== -->
+    <div class="grid gap-6 md:grid-cols-2">
+      <MockImageGalleryCard
+        bind:this={galleryComponent}
+        alarmId={currentAlarm?.id}
+      />
+      <MockVoiceRecordCard
+        bind:this={voiceComponent}
+        alarmId={currentAlarm?.id}
+      />
+      <div class="md:col-span-2">
+        <LocationCard
+          bind:this={locationComponent}
+          entityId={currentAlarm?.id}
+          entityType="alarm"
+        />
       </div>
     </div>
 

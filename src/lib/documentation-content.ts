@@ -105,6 +105,48 @@ src/
     `,
   },
   {
+    id: "mock-features",
+    title: "Mock / Prototype Features",
+    content: `
+      <h2 class="text-2xl font-bold mb-4">Mock / Prototype Features</h2>
+      <p class="mb-4">
+        The application includes several <strong>mock-only</strong> features to demonstrate potential functionality without requiring backend support. These features are isolated and use local browser storage.
+      </p>
+
+      <h3 class="text-xl font-semibold mb-2">Available Mock Features</h3>
+      <ul class="list-disc pl-5 mb-4 space-y-1">
+        <li><strong>Image Gallery:</strong> Upload and view images attached to an alarm.</li>
+        <li><strong>Voice Notes:</strong> Record and playback audio notes for an alarm.</li>
+        <li><strong>Location Map:</strong> A hybrid component. When used with <strong>Assets</strong>, it displays the <em>real</em> location fetched from OpenRemote. When used with <strong>Alarms</strong>, it allows setting a <em>mock</em> location for demonstration purposes.</li>
+      </ul>
+
+      <h3 class="text-xl font-semibold mb-2">Storage & Persistence</h3>
+      <p class="mb-4">
+        Data for the mock features (Gallery, Voice Notes, and Alarm Locations) is stored in the browser's <code>localStorage</code>.
+        <br/>
+        <strong>Keys:</strong>
+        <ul class="list-disc pl-5 mt-2">
+          <li><code>mock:alarm:{id}:gallery</code></li>
+          <li><code>mock:alarm:{id}:recordings</code></li>
+          <li><code>mock:alarm:{id}:location</code></li>
+        </ul>
+      </p>
+
+      <h3 class="text-xl font-semibold mb-2">Implementation Details</h3>
+      <p class="mb-4">
+        The pure mock features (Gallery, Voice) are implemented in <code>src/lib/components/mock/</code>.
+        <br/>
+        The <code>LocationCard</code> is a shared component located at <code>src/lib/components/LocationCard.svelte</code> as it supports both real and mock data modes.
+      </p>
+      <p class="mb-4">
+        <strong>To disable/remove:</strong> Simply remove the component imports and usages in <code>AlarmForm.svelte</code> and <code>AssetForm.svelte</code>.
+      </p>
+      <div class="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-lg text-sm text-yellow-600 dark:text-yellow-400">
+        <strong>Note:</strong> Mock features do <em>not</em> interact with the OpenRemote API. Data is local to your browser. Real asset locations are fetched from the OpenRemote API.
+      </div>
+    `,
+  },
+  {
     id: "domain-model",
     title: "Domain Model",
     content: `
