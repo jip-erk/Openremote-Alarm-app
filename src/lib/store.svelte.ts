@@ -17,6 +17,7 @@ export type ThemePreference = ThemeMode | "system";
 const THEME_STORAGE_KEY = "or-theme";
 const DEFAULT_MANAGER_URL = "https://localhost";
 const SHOW_CONSOLE_ASSETS_KEY = "or-show-console-assets";
+const SHOW_RESOLVED_CLOSED_ALARMS_KEY = "or-show-resolved-closed-alarms";
 
 interface User {
   id?: string;
@@ -42,6 +43,12 @@ function getStoredShowConsoleAssets(): boolean {
   if (typeof window === "undefined") return false;
   const v = localStorage.getItem(SHOW_CONSOLE_ASSETS_KEY);
   return v === "true";
+}
+
+function getStoredShowResolvedClosedAlarms(): boolean {
+  if (typeof window === "undefined") return true;
+  const v = localStorage.getItem(SHOW_RESOLVED_CLOSED_ALARMS_KEY);
+  return v !== "false";
 }
 
 function getStoredThemePreference(): ThemePreference {
@@ -105,6 +112,8 @@ export const appState = $state({
   assetTypeById: {} as Record<string, string>,
   // UI preference: hide console assets by default
   showConsoleAssets: getStoredShowConsoleAssets(),
+  // UI preference: hide resolved/closed alarms by default
+  showResolvedClosedAlarms: getStoredShowResolvedClosedAlarms(),
   assignees: [] as { value: string | null; label: string }[],
   user: null as User | null,
   themePreference: getStoredThemePreference(),
@@ -234,13 +243,17 @@ class OpenRemoteService {
     }
   }
 
-  async updateAlarm(id: number, alarm: SentAlarm) {
+  async updateAlarm(id: number, alarm: SentAlarm, assetIds?: string[]) {
     try {
       if (alarm.assigneeId === "") delete alarm.assigneeId;
-      const response = await rest.api.AlarmResource.updateAlarm(id, alarm);
+      const response = await rest.api.AlarmResource.updateAlarm(
+        id,
+        alarm,
+        assetIds ? { assetIds } : undefined
+      );
       return response.data;
     } catch (error) {
-      console.error("Failed to create alarm:", error);
+      console.error("Failed to update alarm:", error);
       throw error;
     }
   }
@@ -399,6 +412,13 @@ class OpenRemoteService {
     appState.showConsoleAssets = value;
     if (typeof window !== "undefined") {
       localStorage.setItem(SHOW_CONSOLE_ASSETS_KEY, String(value));
+    }
+  }
+
+  setShowResolvedClosedAlarms(value: boolean) {
+    appState.showResolvedClosedAlarms = value;
+    if (typeof window !== "undefined") {
+      localStorage.setItem(SHOW_RESOLVED_CLOSED_ALARMS_KEY, String(value));
     }
   }
 

@@ -5,10 +5,14 @@
   import { groupAlarms } from "$lib/alarm-grouping";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
+  import { Input } from "$lib/components/ui/input/index.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
+  import Search from "@lucide/svelte/icons/search";
   import User from "@lucide/svelte/icons/user";
-  import { appState } from "$lib/store.svelte";
+  import X from "@lucide/svelte/icons/x";
+  import Settings from "@lucide/svelte/icons/settings";
+  import { appState, openRemoteService } from "$lib/store.svelte";
 
   const statusFilters = [
     { label: "All", value: "all" },
@@ -22,9 +26,43 @@
 
   let filter = $state<FilterValue>("all");
   let assigneeFilter = $state<string>("all");
+  let userSearchQuery = $state("");
+  let isUserSearchOpen = $state(false);
+  let userSearchInput = $state<HTMLInputElement | null>(null);
+  let otherSearchQuery = $state("");
+  let isOtherSearchOpen = $state(false);
+  let otherSearchInput = $state<HTMLInputElement | null>(null);
+
+  $effect(() => {
+    if (isOtherSearchOpen && otherSearchInput) {
+      otherSearchInput.focus();
+    }
+  });
+
+  $effect(() => {
+    if (isUserSearchOpen && userSearchInput) {
+      userSearchInput.focus();
+    }
+  });
 
   const userAlarms = $derived(
-    appState.alarms.filter((alarm) => alarm.assigneeId === appState.user?.id)
+    appState.alarms
+      .filter((alarm) => alarm.assigneeId === appState.user?.id)
+      .filter((alarm) => {
+        if (appState.showResolvedClosedAlarms) return true;
+        return (
+          alarm.status !== AlarmStatus.RESOLVED &&
+          alarm.status !== AlarmStatus.CLOSED
+        );
+      })
+      .filter((alarm) => {
+        if (!userSearchQuery.trim()) return true;
+        const query = userSearchQuery.toLowerCase();
+        return (
+          alarm.title?.toLowerCase().includes(query) ||
+          alarm.content?.toLowerCase().includes(query)
+        );
+      })
   );
   const userAlarmGroups = $derived(groupAlarms(userAlarms));
 
@@ -37,7 +75,23 @@
   );
 
   const otherAlarms = $derived(
-    appState.alarms.filter((alarm) => alarm.assigneeId !== appState.user?.id)
+    appState.alarms
+      .filter((alarm) => alarm.assigneeId !== appState.user?.id)
+      .filter((alarm) => {
+        if (appState.showResolvedClosedAlarms) return true;
+        return (
+          alarm.status !== AlarmStatus.RESOLVED &&
+          alarm.status !== AlarmStatus.CLOSED
+        );
+      })
+      .filter((alarm) => {
+        if (!otherSearchQuery.trim()) return true;
+        const query = otherSearchQuery.toLowerCase();
+        return (
+          alarm.title?.toLowerCase().includes(query) ||
+          alarm.content?.toLowerCase().includes(query)
+        );
+      })
   );
 
   const visibleAlarms = $derived(
@@ -64,8 +118,10 @@
 
 <div class="flex flex-col gap-10 pb-24">
   <section class="space-y-4">
-    <header class="flex items-center justify-between gap-3">
-      <div class="flex flex-col">
+    <header
+      class="flex flex-wrap items-end justify-between gap-4 lg:grid lg:grid-cols-3"
+    >
+      <div class="flex flex-col lg:col-span-2">
         <h2 class="text-foreground text-lg font-semibold tracking-tight">
           Your queue
         </h2>
@@ -73,9 +129,90 @@
           Focus on alarms directly assigned to you.
         </p>
       </div>
-      <Badge variant="subtle" class="bg-primary/10 text-primary">
-        {userActive.length} active
-      </Badge>
+      <div class="relative flex items-center justify-end gap-3">
+        <Badge
+          variant="subtle"
+          class="bg-primary/10 text-primary whitespace-nowrap"
+        >
+          {userActive.length} active
+        </Badge>
+
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            {#snippet child({ props })}
+              <Button
+                variant="ghost"
+                size="icon"
+                class="border-border/60 text-muted-foreground rounded-full border hover:bg-[var(--surface-elevated)]"
+                {...props}
+              >
+                <Settings class="size-4" />
+              </Button>
+            {/snippet}
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content align="end">
+            <DropdownMenu.CheckboxItem
+              class="pr-8 pl-2 [&>span]:right-2 [&>span]:left-auto"
+              checked={appState.showResolvedClosedAlarms}
+              onCheckedChange={(v) =>
+                openRemoteService.setShowResolvedClosedAlarms(v)}
+            >
+              Show resolved/closed
+            </DropdownMenu.CheckboxItem>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+
+        <div class="relative">
+          <Button
+            variant={userSearchQuery ? "accent" : "ghost"}
+            size="icon"
+            aria-label="Search your alarms"
+            class={`border-border/60 text-muted-foreground rounded-full border hover:bg-[var(--surface-elevated)] ${isUserSearchOpen ? "opacity-0" : ""}`}
+            onclick={() => (isUserSearchOpen = true)}
+          >
+            <Search class="size-4" />
+          </Button>
+
+          {#if isUserSearchOpen}
+            <div
+              class="animate-in fade-in slide-in-from-right-4 absolute top-1/2 right-0 z-20 w-[calc(100vw-4rem)] -translate-y-1/2 duration-200 sm:w-64"
+            >
+              <div class="relative w-full">
+                <Search
+                  class="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+                />
+                <Input
+                  bind:ref={userSearchInput}
+                  type="search"
+                  placeholder="Search your alarms..."
+                  class="h-9 bg-[var(--surface-elevated)] pr-8 pl-9 shadow-md [&::-webkit-search-cancel-button]:hidden"
+                  bind:value={userSearchQuery}
+                  onblur={() => {
+                    isUserSearchOpen = false;
+                  }}
+                  onkeydown={(e: KeyboardEvent) => {
+                    if (e.key === "Enter") isUserSearchOpen = false;
+                    if (e.key === "Escape") {
+                      isUserSearchOpen = false;
+                    }
+                  }}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-7 -translate-y-1/2"
+                  onmousedown={(e: MouseEvent) => e.preventDefault()}
+                  onclick={() => {
+                    userSearchQuery = "";
+                  }}
+                >
+                  <X class="size-3.5" />
+                </Button>
+              </div>
+            </div>
+          {/if}
+        </div>
+      </div>
     </header>
 
     <div class="grid gap-4 md:grid-cols-2">
@@ -91,7 +228,11 @@
         <div
           class="rounded-3xl border border-dashed border-border/60 bg-[var(--surface-glass)]/70 p-8 text-center text-sm text-muted-foreground md:col-span-2"
         >
-          You’re all caught up — no alarms are assigned to you right now.
+          {#if userSearchQuery.trim()}
+            No alarms match your search.
+          {:else}
+            You’re all caught up. No alarms are assigned to you right now.
+          {/if}
         </div>
       {/each}
     </div>
@@ -103,13 +244,13 @@
     >
       <div>
         <h2 class="text-foreground text-lg font-semibold tracking-tight">
-          All alarms
+          Other alarms
         </h2>
         <p class="text-muted-foreground text-sm">
           Review and monitor alarms across your organization.
         </p>
       </div>
-      <div class="flex flex-wrap gap-2">
+      <div class="relative flex flex-wrap items-center gap-2">
         {#each statusFilters as option (option.value)}
           {@const isActive = filter === option.value}
           <Button
@@ -130,10 +271,10 @@
 
         <DropdownMenu.Root>
           <DropdownMenu.Trigger
-            class={`inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 text-xs rounded-full border gap-2 ${
+            class={`focus-visible:ring-ring inline-flex h-9 items-center justify-center gap-2 rounded-full border px-3 text-xs font-medium whitespace-nowrap transition-colors focus-visible:ring-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${
               assigneeFilter !== "all"
-                ? "bg-accent text-accent-foreground border-transparent hover:bg-accent/90"
-                : "bg-transparent text-muted-foreground border-border/60 hover:bg-[var(--surface-elevated)]"
+                ? "bg-accent text-accent-foreground hover:bg-accent/90 border-transparent"
+                : "text-muted-foreground border-border/60 bg-transparent hover:bg-[var(--surface-elevated)]"
             }`}
           >
             <User class="size-3.5" />
@@ -157,6 +298,80 @@
             </DropdownMenu.RadioGroup>
           </DropdownMenu.Content>
         </DropdownMenu.Root>
+
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            {#snippet child({ props })}
+              <Button
+                variant="ghost"
+                size="icon"
+                class="border-border/60 text-muted-foreground rounded-full border hover:bg-[var(--surface-elevated)]"
+                {...props}
+              >
+                <Settings class="size-4" />
+              </Button>
+            {/snippet}
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content align="end">
+            <DropdownMenu.CheckboxItem
+              class="pr-8 pl-2 [&>span]:right-2 [&>span]:left-auto"
+              checked={appState.showResolvedClosedAlarms}
+              onCheckedChange={(v) =>
+                openRemoteService.setShowResolvedClosedAlarms(v)}
+            >
+              Show resolved/closed
+            </DropdownMenu.CheckboxItem>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+
+        <Button
+          variant={otherSearchQuery ? "accent" : "ghost"}
+          size="icon"
+          aria-label="Search other alarms"
+          class={`border-border/60 text-muted-foreground rounded-full border hover:bg-[var(--surface-elevated)] ${isOtherSearchOpen ? "opacity-0" : ""}`}
+          onclick={() => (isOtherSearchOpen = true)}
+        >
+          <Search class="size-4" />
+        </Button>
+
+        {#if isOtherSearchOpen}
+          <div
+            class="animate-in fade-in slide-in-from-right-4 absolute top-0 right-0 z-20 h-9 w-full duration-200 sm:w-64"
+          >
+            <div class="relative h-full w-full">
+              <Search
+                class="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+              />
+              <Input
+                bind:ref={otherSearchInput}
+                type="search"
+                placeholder="Search other alarms..."
+                class="h-full bg-[var(--surface-elevated)] pr-8 pl-9 shadow-md [&::-webkit-search-cancel-button]:hidden"
+                bind:value={otherSearchQuery}
+                onblur={() => {
+                  isOtherSearchOpen = false;
+                }}
+                onkeydown={(e: KeyboardEvent) => {
+                  if (e.key === "Enter") isOtherSearchOpen = false;
+                  if (e.key === "Escape") {
+                    isOtherSearchOpen = false;
+                  }
+                }}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                class="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-7 -translate-y-1/2"
+                onmousedown={(e: MouseEvent) => e.preventDefault()}
+                onclick={() => {
+                  otherSearchQuery = "";
+                }}
+              >
+                <X class="size-3.5" />
+              </Button>
+            </div>
+          </div>
+        {/if}
       </div>
     </header>
 
@@ -173,7 +388,11 @@
         <div
           class="rounded-3xl border border-dashed border-border/60 bg-[var(--surface-glass)]/70 p-10 text-center text-sm text-muted-foreground md:col-span-2"
         >
-          No alarms match the current filter.
+          {#if otherSearchQuery.trim()}
+            No alarms match your search.
+          {:else}
+            No alarms match the current filter.
+          {/if}
         </div>
       {/each}
     </div>

@@ -18,6 +18,7 @@
   import AssetCard from "$lib/components/AssetCard.svelte";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
   import Search from "@lucide/svelte/icons/search";
+  import X from "@lucide/svelte/icons/x";
 
   onMount(() => {
     openRemoteService.fetchAssets();
@@ -28,6 +29,14 @@
   };
 
   let searchQuery = $state("");
+  let isSearchOpen = $state(false);
+  let searchInput = $state<HTMLInputElement | null>(null);
+
+  $effect(() => {
+    if (isSearchOpen && searchInput) {
+      searchInput.focus();
+    }
+  });
 
   const filteredAssets = $derived(
     appState.assets.filter((link) => {
@@ -76,18 +85,9 @@
           alarms.
         </p>
       </div>
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:self-end">
-        <div class="relative w-full sm:w-64">
-          <Search
-            class="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
-          />
-          <Input
-            type="search"
-            placeholder="Search assets..."
-            class="h-9 pl-9"
-            bind:value={searchQuery}
-          />
-        </div>
+      <div
+        class="relative flex w-full flex-row items-center justify-between gap-3 sm:w-auto sm:justify-end"
+      >
         <div class="flex items-center gap-3">
           <Checkbox
             checked={appState.showConsoleAssets}
@@ -101,6 +101,57 @@
             </span>
           </Checkbox>
         </div>
+
+        <div class="relative">
+          <Button
+            variant={searchQuery ? "accent" : "ghost"}
+            size="icon"
+            aria-label="Search assets"
+            class={`border-border/60 text-muted-foreground rounded-full border hover:bg-[var(--surface-elevated)] ${isSearchOpen ? "opacity-0" : ""}`}
+            onclick={() => (isSearchOpen = true)}
+          >
+            <Search class="size-4" />
+          </Button>
+
+          {#if isSearchOpen}
+            <div
+              class="animate-in fade-in slide-in-from-right-4 absolute top-1/2 right-0 z-20 w-[calc(100vw-4rem)] -translate-y-1/2 duration-200 sm:w-64"
+            >
+              <div class="relative w-full">
+                <Search
+                  class="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+                />
+                <Input
+                  bind:ref={searchInput}
+                  type="search"
+                  placeholder="Search assets..."
+                  class="h-9 bg-[var(--surface-elevated)] pr-8 pl-9 shadow-md [&::-webkit-search-cancel-button]:hidden"
+                  bind:value={searchQuery}
+                  onblur={() => {
+                    isSearchOpen = false;
+                  }}
+                  onkeydown={(e: KeyboardEvent) => {
+                    if (e.key === "Enter") isSearchOpen = false;
+                    if (e.key === "Escape") {
+                      isSearchOpen = false;
+                    }
+                  }}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-7 -translate-y-1/2"
+                  onmousedown={(e: MouseEvent) => e.preventDefault()}
+                  onclick={() => {
+                    searchQuery = "";
+                  }}
+                >
+                  <X class="size-3.5" />
+                </Button>
+              </div>
+            </div>
+          {/if}
+        </div>
       </div>
     </div>
   </header>
@@ -112,7 +163,11 @@
       <div
         class="rounded-3xl border border-dashed border-border/60 bg-[var(--surface-glass)]/70 p-10 text-center text-sm text-muted-foreground"
       >
-        Assets from OpenRemote will appear here once linked to your profile.
+        {#if searchQuery.trim()}
+          No assets match your search.
+        {:else}
+          Assets from OpenRemote will appear here once linked to your profile.
+        {/if}
       </div>
     {/each}
   </div>

@@ -60,7 +60,11 @@ describe("AssetList", () => {
       },
     ] as any;
 
-    const { getByPlaceholderText, getByText, queryByText } = render(AssetList);
+    const { getByPlaceholderText, getByText, queryByText, getByLabelText } =
+      render(AssetList);
+
+    const searchButton = getByLabelText("Search assets");
+    await fireEvent.click(searchButton);
 
     const searchInput = getByPlaceholderText(/search/i);
     await fireEvent.input(searchInput, { target: { value: "Ware" } });

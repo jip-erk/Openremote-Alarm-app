@@ -10,6 +10,8 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
   import AlarmCard from "$lib/components/AlarmCard.svelte";
+  import AlarmGroup from "$lib/components/AlarmGroup.svelte";
+  import { groupAlarms } from "$lib/alarm-grouping";
   import { PageIndex } from "$lib/pages";
   import {
     appState,
@@ -21,6 +23,9 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import User from "@lucide/svelte/icons/user";
+  import Search from "@lucide/svelte/icons/search";
+  import X from "@lucide/svelte/icons/x";
+  import Settings from "@lucide/svelte/icons/settings";
   import LocationCard from "$lib/components/LocationCard.svelte";
   import {
     getTypeInfoByKey,
@@ -178,17 +183,43 @@
   type FilterValue = (typeof statusFilters)[number]["value"];
   let alarmFilter = $state<FilterValue>("all");
   let assigneeFilter = $state<string>("all");
+  let searchQuery = $state("");
+  let isSearchOpen = $state(false);
+  let searchInput = $state<HTMLInputElement | null>(null);
+
+  $effect(() => {
+    if (isSearchOpen && searchInput) {
+      searchInput.focus();
+    }
+  });
 
   const visibleRelatedAlarms = $derived(
     (alarmFilter === "all"
       ? relatedAlarms
       : relatedAlarms.filter((a) => a.status === alarmFilter)
-    ).filter((alarm) => {
-      if (assigneeFilter === "all") return true;
-      if (assigneeFilter === "unassigned") return !alarm.assigneeId;
-      return alarm.assigneeId === assigneeFilter;
-    })
+    )
+      .filter((alarm) => {
+        if (appState.showResolvedClosedAlarms) return true;
+        return (
+          alarm.status !== AlarmStatus.RESOLVED &&
+          alarm.status !== AlarmStatus.CLOSED
+        );
+      })
+      .filter((alarm) => {
+        if (assigneeFilter === "all") return true;
+        if (assigneeFilter === "unassigned") return !alarm.assigneeId;
+        return alarm.assigneeId === assigneeFilter;
+      })
+      .filter((alarm) => {
+        if (!searchQuery.trim()) return true;
+        const query = searchQuery.toLowerCase();
+        return (
+          alarm.title?.toLowerCase().includes(query) ||
+          alarm.content?.toLowerCase().includes(query)
+        );
+      })
   );
+  const visibleAlarmGroups = $derived(groupAlarms(visibleRelatedAlarms));
 
   const selectedAssigneeLabel = $derived(
     assigneeFilter === "all"
@@ -368,7 +399,7 @@
           Alarms associated with this asset.
         </p>
       </div>
-      <div class="flex flex-wrap gap-2">
+      <div class="relative flex flex-wrap items-center gap-2">
         {#each statusFilters as option (option.value)}
           {@const isActive = alarmFilter === option.value}
           <Button
@@ -411,13 +442,92 @@
             </DropdownMenu.RadioGroup>
           </DropdownMenu.Content>
         </DropdownMenu.Root>
+
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            {#snippet child({ props })}
+              <Button
+                variant="ghost"
+                size="icon"
+                class="border-border/60 text-muted-foreground rounded-full border hover:bg-[var(--surface-elevated)]"
+                {...props}
+              >
+                <Settings class="size-4" />
+              </Button>
+            {/snippet}
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content align="end">
+            <DropdownMenu.CheckboxItem
+              class="pr-8 pl-2 [&>span]:right-2 [&>span]:left-auto"
+              checked={appState.showResolvedClosedAlarms}
+              onCheckedChange={(v) =>
+                openRemoteService.setShowResolvedClosedAlarms(v)}
+            >
+              Show resolved/closed
+            </DropdownMenu.CheckboxItem>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+
+        <Button
+          variant={searchQuery ? "accent" : "ghost"}
+          size="icon"
+          class={`border-border/60 text-muted-foreground rounded-full border hover:bg-[var(--surface-elevated)] ${isSearchOpen ? "opacity-0" : ""}`}
+          onclick={() => (isSearchOpen = true)}
+        >
+          <Search class="size-4" />
+        </Button>
+
+        {#if isSearchOpen}
+          <div
+            class="animate-in fade-in slide-in-from-right-4 absolute top-0 right-0 z-20 h-9 w-full duration-200 sm:w-64"
+          >
+            <div class="relative h-full w-full">
+              <Search
+                class="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+              />
+              <Input
+                bind:ref={searchInput}
+                type="search"
+                placeholder="Search alarms..."
+                class="h-full bg-[var(--surface-elevated)] pr-8 pl-9 shadow-md [&::-webkit-search-cancel-button]:hidden"
+                bind:value={searchQuery}
+                onblur={() => {
+                  isSearchOpen = false;
+                }}
+                onkeydown={(e: KeyboardEvent) => {
+                  if (e.key === "Enter") isSearchOpen = false;
+                  if (e.key === "Escape") {
+                    isSearchOpen = false;
+                  }
+                }}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                class="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-7 -translate-y-1/2"
+                onmousedown={(e: MouseEvent) => e.preventDefault()}
+                onclick={() => {
+                  searchQuery = "";
+                }}
+              >
+                <X class="size-3.5" />
+              </Button>
+            </div>
+          </div>
+        {/if}
       </div>
     </header>
 
-    {#if visibleRelatedAlarms.length > 0}
+    {#if visibleAlarmGroups.length > 0}
       <div class="grid gap-4 md:grid-cols-2">
-        {#each visibleRelatedAlarms as alarm (alarm.id)}
-          <AlarmCard {alarm} />
+        {#each visibleAlarmGroups as group (group.key)}
+          {#if group.count === 1}
+            <AlarmCard alarm={group.items[0]} />
+          {:else}
+            <div class="md:col-span-2">
+              <AlarmGroup {group} />
+            </div>
+          {/if}
         {/each}
       </div>
     {:else}

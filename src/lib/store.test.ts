@@ -32,6 +32,7 @@ vi.mock("@openremote/rest", () => {
       api: {
         AlarmResource: {
           getAlarms: vi.fn().mockResolvedValue({ data: [] }),
+          updateAlarm: vi.fn().mockResolvedValue({ data: {} }),
         },
         AssetResource: {
           getUserAssetLinks: vi.fn().mockResolvedValue({ data: [] }),
@@ -122,6 +123,20 @@ describe("store", () => {
       expect(rest.api.AssetResource.get).toHaveBeenCalledWith("asset-1");
       expect(appState.assets).toEqual(mockLinks);
       expect(appState.consoleAssetIds["asset-1"]).toBe(true);
+    });
+
+    it("updateAlarm should call API with assetIds", async () => {
+      const alarmId = 123;
+      const alarmData = { title: "Updated Alarm" } as any;
+      const assetIds = ["asset-1", "asset-2"];
+
+      await openRemoteService.updateAlarm(alarmId, alarmData, assetIds);
+
+      expect(rest.api.AlarmResource.updateAlarm).toHaveBeenCalledWith(
+        alarmId,
+        alarmData,
+        { assetIds }
+      );
     });
   });
 });

@@ -62,6 +62,8 @@ export interface AssetTypeInfo {
   icon: AssetIconComponent;
   // Tailwind classes for bg/text color hints
   colorClasses?: { bg: string; text: string };
+  // Tailwind classes for hover states (bg, border, text)
+  hoverClasses?: string;
 }
 
 // Mapping informed by openremote model asset impl descriptors
@@ -73,6 +75,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["BuildingAsset"],
     icon: Building2,
     colorClasses: { bg: "bg-blue-500/10", text: "text-blue-600" },
+    hoverClasses:
+      "hover:bg-blue-500/10 hover:border-blue-600 hover:text-blue-600",
   },
   city: {
     key: "city",
@@ -81,6 +85,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["CityAsset"],
     icon: Building2,
     colorClasses: { bg: "bg-indigo-500/10", text: "text-indigo-600" },
+    hoverClasses:
+      "hover:bg-indigo-500/10 hover:border-indigo-600 hover:text-indigo-600",
   },
   room: {
     key: "room",
@@ -89,6 +95,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["RoomAsset"],
     icon: DoorClosed,
     colorClasses: { bg: "bg-emerald-500/10", text: "text-emerald-600" },
+    hoverClasses:
+      "hover:bg-emerald-500/10 hover:border-emerald-600 hover:text-emerald-600",
   },
   gateway: {
     key: "gateway",
@@ -97,6 +105,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["GatewayAsset"],
     icon: Router,
     colorClasses: { bg: "bg-amber-500/10", text: "text-amber-600" },
+    hoverClasses:
+      "hover:bg-amber-500/10 hover:border-amber-600 hover:text-amber-600",
   },
   console: {
     key: "console",
@@ -105,6 +115,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["ConsoleAsset"],
     icon: MonitorSmartphone,
     colorClasses: { bg: "bg-slate-500/10", text: "text-slate-600" },
+    hoverClasses:
+      "hover:bg-slate-500/10 hover:border-slate-600 hover:text-slate-600",
   },
   weather: {
     key: "weather",
@@ -113,6 +125,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["WeatherAsset"],
     icon: CloudSun,
     colorClasses: { bg: "bg-cyan-500/10", text: "text-cyan-600" },
+    hoverClasses:
+      "hover:bg-cyan-500/10 hover:border-cyan-600 hover:text-cyan-600",
   },
   light: {
     key: "light",
@@ -121,6 +135,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["LightAsset"],
     icon: Lightbulb,
     colorClasses: { bg: "bg-rose-500/10", text: "text-rose-600" },
+    hoverClasses:
+      "hover:bg-rose-500/10 hover:border-rose-600 hover:text-rose-600",
   },
   microphone: {
     key: "microphone",
@@ -129,6 +145,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["MicrophoneAsset"],
     icon: Mic,
     colorClasses: { bg: "bg-fuchsia-500/10", text: "text-fuchsia-600" },
+    hoverClasses:
+      "hover:bg-fuchsia-500/10 hover:border-fuchsia-600 hover:text-fuchsia-600",
   },
   thermostat: {
     key: "thermostat",
@@ -137,6 +155,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["ThermostatAsset"],
     icon: Thermometer,
     colorClasses: { bg: "bg-orange-500/10", text: "text-orange-600" },
+    hoverClasses:
+      "hover:bg-orange-500/10 hover:border-orange-600 hover:text-orange-600",
   },
   "electric-vehicle": {
     key: "electric-vehicle",
@@ -145,6 +165,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["ElectricVehicleAsset"],
     icon: Car,
     colorClasses: { bg: "bg-lime-500/10", text: "text-lime-600" },
+    hoverClasses:
+      "hover:bg-lime-500/10 hover:border-lime-600 hover:text-lime-600",
   },
   "ev-charger": {
     key: "ev-charger",
@@ -153,6 +175,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["ElectricityChargerAsset"],
     icon: PlugZap,
     colorClasses: { bg: "bg-green-500/10", text: "text-green-600" },
+    hoverClasses:
+      "hover:bg-green-500/10 hover:border-green-600 hover:text-green-600",
   },
   "electricity-producer-solar": {
     key: "electricity-producer-solar",
@@ -161,6 +185,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["ElectricityProducerSolarAsset"],
     icon: Sun,
     colorClasses: { bg: "bg-yellow-500/10", text: "text-yellow-600" },
+    hoverClasses:
+      "hover:bg-yellow-500/10 hover:border-yellow-600 hover:text-yellow-600",
   },
   "electricity-producer-wind": {
     key: "electricity-producer-wind",
@@ -169,6 +195,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["ElectricityProducerWindAsset"],
     icon: Wind,
     colorClasses: { bg: "bg-teal-500/10", text: "text-teal-600" },
+    hoverClasses:
+      "hover:bg-teal-500/10 hover:border-teal-600 hover:text-teal-600",
   },
   "electricity-storage": {
     key: "electricity-storage",
@@ -177,6 +205,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["ElectricityStorageAsset", "ElectricityBatteryAsset"],
     icon: BatteryCharging,
     colorClasses: { bg: "bg-violet-500/10", text: "text-violet-600" },
+    hoverClasses:
+      "hover:bg-violet-500/10 hover:border-violet-600 hover:text-violet-600",
   },
   "electricity-supplier": {
     key: "electricity-supplier",
@@ -185,6 +215,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["ElectricitySupplierAsset"],
     icon: Bolt,
     colorClasses: { bg: "bg-yellow-500/10", text: "text-yellow-700" },
+    hoverClasses:
+      "hover:bg-yellow-500/10 hover:border-yellow-700 hover:text-yellow-700",
   },
   "environment-sensor": {
     key: "environment-sensor",
@@ -193,6 +225,7 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["EnvironmentSensorAsset"],
     icon: Droplets,
     colorClasses: { bg: "bg-sky-500/10", text: "text-sky-600" },
+    hoverClasses: "hover:bg-sky-500/10 hover:border-sky-600 hover:text-sky-600",
   },
   "groundwater-sensor": {
     key: "groundwater-sensor",
@@ -201,6 +234,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["GroundwaterSensorAsset"],
     icon: Droplets,
     colorClasses: { bg: "bg-blue-500/10", text: "text-blue-700" },
+    hoverClasses:
+      "hover:bg-blue-500/10 hover:border-blue-700 hover:text-blue-700",
   },
   "people-counter": {
     key: "people-counter",
@@ -209,6 +244,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["PeopleCounterAsset"],
     icon: Users,
     colorClasses: { bg: "bg-purple-500/10", text: "text-purple-600" },
+    hoverClasses:
+      "hover:bg-purple-500/10 hover:border-purple-600 hover:text-purple-600",
   },
   "presence-sensor": {
     key: "presence-sensor",
@@ -217,6 +254,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["PresenceSensorAsset"],
     icon: Eye,
     colorClasses: { bg: "bg-pink-500/10", text: "text-pink-600" },
+    hoverClasses:
+      "hover:bg-pink-500/10 hover:border-pink-600 hover:text-pink-600",
   },
   parking: {
     key: "parking",
@@ -225,6 +264,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["ParkingAsset"],
     icon: Car,
     colorClasses: { bg: "bg-gray-500/10", text: "text-gray-600" },
+    hoverClasses:
+      "hover:bg-gray-500/10 hover:border-gray-600 hover:text-gray-600",
   },
   ship: {
     key: "ship",
@@ -233,6 +274,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["ShipAsset"],
     icon: Ship,
     colorClasses: { bg: "bg-cyan-500/10", text: "text-cyan-700" },
+    hoverClasses:
+      "hover:bg-cyan-500/10 hover:border-cyan-700 hover:text-cyan-700",
   },
   door: {
     key: "door",
@@ -241,6 +284,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["DoorAsset"],
     icon: DoorClosed,
     colorClasses: { bg: "bg-emerald-500/10", text: "text-emerald-700" },
+    hoverClasses:
+      "hover:bg-emerald-500/10 hover:border-emerald-700 hover:text-emerald-700",
   },
   plug: {
     key: "plug",
@@ -249,6 +294,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["PlugAsset"],
     icon: Plug,
     colorClasses: { bg: "bg-stone-500/10", text: "text-stone-700" },
+    hoverClasses:
+      "hover:bg-stone-500/10 hover:border-stone-700 hover:text-stone-700",
   },
   group: {
     key: "group",
@@ -257,6 +304,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["GroupAsset", "ElectricVehicleFleetGroupAsset"],
     icon: FolderTree,
     colorClasses: { bg: "bg-slate-500/10", text: "text-slate-600" },
+    hoverClasses:
+      "hover:bg-slate-500/10 hover:border-slate-600 hover:text-slate-600",
   },
   thing: {
     key: "thing",
@@ -265,6 +314,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: ["ThingAsset", "UnknownAsset", "Asset"],
     icon: Box,
     colorClasses: { bg: "bg-slate-500/10", text: "text-slate-600" },
+    hoverClasses:
+      "hover:bg-slate-500/10 hover:border-slate-600 hover:text-slate-600",
   },
   unknown: {
     key: "unknown",
@@ -273,6 +324,8 @@ export const ASSET_TYPE_REGISTRY: Record<AssetTypeKey, AssetTypeInfo> = {
     classNames: [],
     icon: Box,
     colorClasses: { bg: "bg-slate-500/10", text: "text-slate-600" },
+    hoverClasses:
+      "hover:bg-slate-500/10 hover:border-slate-600 hover:text-slate-600",
   },
 };
 

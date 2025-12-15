@@ -16,6 +16,7 @@ vi.mock("$lib/store.svelte", () => {
         { value: "user-2", label: "Other" },
       ],
       pageIndex: 0,
+      showResolvedClosedAlarms: true,
     },
     openRemoteService: {
       // Add methods if needed

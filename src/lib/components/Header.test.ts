@@ -100,9 +100,9 @@ describe("Header", () => {
 
     // Click Logout
     await waitFor(() => {
-      expect(getByText("Logout")).toBeInTheDocument();
+      expect(getByText("Log out")).toBeInTheDocument();
     });
-    const logoutItem = getByText("Logout");
+    const logoutItem = getByText("Log out");
     await fireEvent.click(logoutItem);
 
     expect(store.openRemoteService.logout).toHaveBeenCalled();

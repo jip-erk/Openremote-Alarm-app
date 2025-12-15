@@ -16,6 +16,7 @@ export const documentationSections: DocSection[] = [
       <h3 class="text-xl font-semibold mb-2">Core Features</h3>
       <ul class="list-disc pl-5 mb-4 space-y-1">
         <li><strong>Alarm Monitoring:</strong> Real-time view of active alarms, filtered by status and assignee.</li>
+        <li><strong>Advanced Filtering:</strong> Search alarms and assets, toggle resolved/closed alarms globally, and filter by assignee.</li>
         <li><strong>Asset Management:</strong> View connected assets and their health/alarm status.</li>
         <li><strong>Alarm Resolution:</strong> Detailed alarm view with action history and resolution workflow.</li>
         <li><strong>Theming:</strong> Customizable appearance (colors, logos) persisted per user.</li>
@@ -157,6 +158,11 @@ src/
         The core entity. Alarms have a <code>status</code> (OPEN, IN_PROGRESS, RESOLVED), <code>severity</code>, and are linked to an <code>assignee</code> (User) and <code>assets</code>.
       </p>
 
+      <h3 class="text-xl font-semibold mb-2">Alarm Grouping</h3>
+      <p class="mb-4">
+        To reduce noise, alarms with the same title and content are grouped into <code>AlarmGroup</code> objects in the UI. This allows operators to perform bulk status updates on multiple related alarms at once.
+      </p>
+
       <h3 class="text-xl font-semibold mb-2">Assets (UserAssetLink)</h3>
       <p class="mb-4">
         Represents physical or logical devices. The app uses <code>UserAssetLink</code> to display assets the user has access to. We infer "Asset Types" (e.g., Building, Room, Device) using <code>asset-types.ts</code> to provide relevant icons and colors.
@@ -181,17 +187,17 @@ src/
 
       <h3 class="text-xl font-semibold mb-2">Pages</h3>
       <ul class="list-disc pl-5 mb-4 space-y-1">
-        <li><strong>AlarmList:</strong> The main dashboard. Displays grouped alarms. Uses <code>alarm-grouping.ts</code> to cluster duplicates.</li>
-        <li><strong>AssetList:</strong> Grid view of assets with search and filtering.</li>
-        <li><strong>AssetForm:</strong> Detail view of a single asset, showing its specific alarms and attributes.</li>
+        <li><strong>AlarmList:</strong> The main dashboard. Displays grouped alarms. Uses <code>alarm-grouping.ts</code> to cluster duplicates. Features expandable search, assignee filtering, and a global toggle for resolved/closed alarms.</li>
+        <li><strong>AssetList:</strong> Grid view of assets with search and filtering. Includes a toggle to show/hide console assets.</li>
+        <li><strong>AssetForm:</strong> Detail view of a single asset. Mirrors the Alarm List functionality with alarm grouping, search, and filtering specific to the asset.</li>
         <li><strong>AlarmForm (Report):</strong> Detail view of an alarm, allowing status changes and assignment.</li>
       </ul>
 
       <h3 class="text-xl font-semibold mb-2">Key Components</h3>
       <ul class="list-disc pl-5 mb-4 space-y-1">
-        <li><strong>Header:</strong> Top navigation bar with user profile, theme toggle, and high-level stats (StatTile).</li>
+        <li><strong>Header:</strong> Top navigation bar with enhanced user profile dropdown, theme toggle, and high-level stats (StatTile).</li>
         <li><strong>PageNav:</strong> Bottom navigation bar for mobile/tablet views.</li>
-        <li><strong>AlarmCard / AlarmGroup:</strong> The primary display units for alarms. AlarmGroup clusters duplicates.</li>
+        <li><strong>AlarmCard / AlarmGroup:</strong> The primary display units for alarms. AlarmGroup clusters duplicates and supports bulk actions.</li>
         <li><strong>AssetCard:</strong> Display unit for assets, color-coded by type.</li>
         <li><strong>AddAlarmForm / AddAssetForm:</strong> Forms for creating new entities.</li>
         <li><strong>ThemeToggle:</strong> Handles light/dark mode switching.</li>
@@ -224,6 +230,9 @@ src/
       <ul class="list-disc pl-5 mb-4 space-y-1">
         <li><code>VITE_OR_MANAGER_URL</code>: The URL of the OpenRemote Manager instance.</li>
       </ul>
+      <p class="mb-4">
+        User preferences such as theme, "Show resolved/closed alarms", and "Show console assets" are persisted in the browser's <code>localStorage</code>.
+      </p>
 
       <h3 class="text-xl font-semibold mb-2">Logging</h3>
       <p class="mb-4">

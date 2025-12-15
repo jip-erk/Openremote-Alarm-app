@@ -6,6 +6,8 @@
   import Layers3 from "@lucide/svelte/icons/layers-3";
   import LinkIcon from "@lucide/svelte/icons/link";
   import BookOpen from "@lucide/svelte/icons/book-open";
+  import Palette from "@lucide/svelte/icons/palette";
+  import LogOut from "@lucide/svelte/icons/log-out";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
@@ -184,18 +186,58 @@
             </Avatar.Fallback>
           </Avatar.Root>
         </DropdownMenu.Trigger>
-        <DropdownMenu.Content align="end" class="w-48">
+        <DropdownMenu.Content align="end" class="w-60">
           <DropdownMenu.Group>
-            <DropdownMenu.Label>{userName}</DropdownMenu.Label>
+            <div class="flex items-center gap-3 p-2">
+              <Avatar.Root class="size-10 rounded-xl">
+                <Avatar.Fallback
+                  class="bg-primary/10 text-primary text-sm font-semibold"
+                >
+                  {initials}
+                </Avatar.Fallback>
+              </Avatar.Root>
+              <div class="flex flex-col">
+                <span class="text-sm font-medium">{userName}</span>
+                <span class="text-muted-foreground text-xs">Operator</span>
+              </div>
+            </div>
             <DropdownMenu.Separator />
             <DropdownMenu.Item
               onclick={() => openRemoteService.navigateTo(PageIndex.APPEARANCE)}
+              class="group data-highlighted:text-foreground data-highlighted:[&_svg]:text-primary data-highlighted:bg-[var(--surface-highlight)]"
             >
-              Appearance
+              <div class="flex items-center gap-3">
+                <Palette
+                  class="text-muted-foreground size-4 transition-colors"
+                />
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium">Appearance</span>
+                  <span
+                    class="text-muted-foreground group-data-highlighted:text-foreground/80 text-xs"
+                  >
+                    Customize look & feel
+                  </span>
+                </div>
+              </div>
             </DropdownMenu.Item>
             <DropdownMenu.Separator />
-            <DropdownMenu.Item onclick={() => openRemoteService.logout()}>
-              Logout
+            <DropdownMenu.Item
+              onclick={() => openRemoteService.logout()}
+              class="group data-highlighted:text-foreground data-highlighted:[&_svg]:text-destructive data-highlighted:bg-destructive/10"
+            >
+              <div class="flex items-center gap-3">
+                <LogOut
+                  class="text-muted-foreground size-4 transition-colors"
+                />
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium">Log out</span>
+                  <span
+                    class="text-muted-foreground group-data-highlighted:text-foreground/80 text-xs"
+                  >
+                    End your session
+                  </span>
+                </div>
+              </div>
             </DropdownMenu.Item>
           </DropdownMenu.Group>
         </DropdownMenu.Content>
