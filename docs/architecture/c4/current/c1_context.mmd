@@ -1,0 +1,9 @@
+C4Context
+    title System Context Diagram for OpenRemote Alarm App
+
+    Person(operator, "Operator", "A user who monitors alarms and assets.")
+    System(alarmApp, "Alarm App", "Allows users to view and manage alarms and assets.")
+    System_Ext(orManager, "OpenRemote Manager", "The core IoT platform managing assets, alarms, and users.")
+
+    Rel_D(operator, alarmApp, "Uses", "HTTPS")
+    Rel_D(alarmApp, orManager, "Gets data from and subscribes to events", "HTTPS/WSS")

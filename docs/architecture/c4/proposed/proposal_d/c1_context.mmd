@@ -1,0 +1,13 @@
+C4Context
+    title System Context - Proposal D: Multi-Tenant / Multi-Instance
+
+    Person(operator, "Operator", "A user who monitors alarms and assets.")
+    System(alarmApp, "Alarm App", "Multi-tenant frontend.")
+    System(registry, "Instance Registry", "Manages available OpenRemote instances.")
+    System_Ext(orManager1, "OpenRemote Manager (Tenant A)", "IoT Platform A")
+    System_Ext(orManager2, "OpenRemote Manager (Tenant B)", "IoT Platform B")
+
+    Rel_D(operator, alarmApp, "Uses", "HTTPS")
+    Rel_D(alarmApp, registry, "Gets config", "HTTPS")
+    Rel_D(alarmApp, orManager1, "Connects to", "HTTPS/WSS")
+    Rel_D(alarmApp, orManager2, "Connects to", "HTTPS/WSS")

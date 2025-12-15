@@ -2,14 +2,22 @@
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+  import { Input } from "$lib/components/ui/input/index.js";
   import { PageIndex } from "$lib/pages";
   import {
     openRemoteService,
     appState,
     isConsoleAssetLink,
   } from "$lib/store.svelte";
+  import {
+    getTypeInfoByKey,
+    resolveTypeKeyFromLink,
+    resolveTypeKeyFromAsset,
+    type OrAssetLike,
+  } from "$lib/asset-types";
   import AssetCard from "$lib/components/AssetCard.svelte";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
+  import Search from "@lucide/svelte/icons/search";
 
   onMount(() => {
     openRemoteService.fetchAssets();
@@ -19,10 +27,31 @@
     openRemoteService.navigateTo(PageIndex.ALARMS);
   };
 
+  let searchQuery = $state("");
+
   const filteredAssets = $derived(
-    appState.assets.filter((link) =>
-      appState.showConsoleAssets ? true : !isConsoleAssetLink(link)
-    )
+    appState.assets.filter((link) => {
+      const isConsole = isConsoleAssetLink(link);
+      if (!appState.showConsoleAssets && isConsole) return false;
+
+      if (!searchQuery.trim()) return true;
+
+      const query = searchQuery.toLowerCase();
+      const nameMatch = link.assetName?.toLowerCase().includes(query);
+
+      const typeKey = isConsole
+        ? "console"
+        : link.id?.assetId && appState.assetTypeById[link.id.assetId]
+          ? resolveTypeKeyFromAsset({
+              typeName: appState.assetTypeById[link.id.assetId],
+            } as OrAssetLike)
+          : resolveTypeKeyFromLink(link, false);
+
+      const typeInfo = getTypeInfoByKey(typeKey);
+      const categoryMatch = typeInfo.label.toLowerCase().includes(query);
+
+      return nameMatch || categoryMatch;
+    })
   );
 </script>
 
@@ -47,18 +76,31 @@
           alarms.
         </p>
       </div>
-      <div class="flex items-center gap-3 sm:self-end">
-        <Checkbox
-          checked={appState.showConsoleAssets}
-          on:change={(e) => openRemoteService.setShowConsoleAssets(e.detail)}
-        >
-          <span
-            class="text-muted-foreground text-sm"
-            class:text-primary={appState.showConsoleAssets}
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:self-end">
+        <div class="relative w-full sm:w-64">
+          <Search
+            class="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+          />
+          <Input
+            type="search"
+            placeholder="Search assets..."
+            class="h-9 pl-9"
+            bind:value={searchQuery}
+          />
+        </div>
+        <div class="flex items-center gap-3">
+          <Checkbox
+            checked={appState.showConsoleAssets}
+            on:change={(e) => openRemoteService.setShowConsoleAssets(e.detail)}
           >
-            Show console assets
-          </span>
-        </Checkbox>
+            <span
+              class="text-muted-foreground text-sm"
+              class:text-primary={appState.showConsoleAssets}
+            >
+              Show console assets
+            </span>
+          </Checkbox>
+        </div>
       </div>
     </div>
   </header>

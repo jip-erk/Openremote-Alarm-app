@@ -5,9 +5,11 @@
   import UserCheck from "@lucide/svelte/icons/user-check";
   import Layers3 from "@lucide/svelte/icons/layers-3";
   import LinkIcon from "@lucide/svelte/icons/link";
+  import BookOpen from "@lucide/svelte/icons/book-open";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
+  import { Button } from "$lib/components/ui/button/index.js";
   import ThemeToggle from "$lib/components/ThemeToggle.svelte";
   import StatTile from "$lib/components/StatTile.svelte";
   import { PageIndex } from "$lib/pages";
@@ -144,7 +146,9 @@
         <img
           src={appState.appearance.logoUrl || logo}
           alt="OpenRemote"
-          class="hidden h-8 w-auto sm:block"
+          class={appState.appearance.logoMobileUrl
+            ? "hidden h-8 w-auto sm:block"
+            : "h-8 w-auto"}
         />
       </div>
       <div class="flex flex-col">
@@ -158,6 +162,15 @@
     </div>
 
     <div class="flex items-center gap-3">
+      <Button
+        variant="ghost"
+        size="icon"
+        class="border-border/50 text-foreground/90 rounded-full border bg-[var(--surface-elevated)]/70 hover:bg-[var(--surface-highlight)]"
+        onclick={() => openRemoteService.navigateTo(PageIndex.DOCUMENTATION)}
+        title="Documentation"
+      >
+        <BookOpen class="size-5" />
+      </Button>
       <ThemeToggle />
       <DropdownMenu.Root>
         <DropdownMenu.Trigger>
@@ -225,7 +238,7 @@
           <div class="flex items-center justify-between">
             <span
               class="text-xs tracking-wider text-black/80 uppercase dark:text-white/80"
-              >Health</span
+              >Progress</span
             >
             <Activity class="size-4 text-black opacity-90 dark:text-white" />
           </div>
@@ -233,7 +246,7 @@
             {resolvedPercentage}%
           </div>
           <p class="text-xs text-black/70 dark:text-white/80">
-            Resolved alarms this cycle. Keep momentum steady.
+            Resolved alarms across the organization. Keep momentum steady.
           </p>
           <Badge
             variant="subtle"

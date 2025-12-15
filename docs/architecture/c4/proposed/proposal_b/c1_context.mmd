@@ -1,0 +1,11 @@
+C4Context
+    title System Context - Proposal B: Event-Driven + Streaming Updates
+
+    Person(operator, "Operator", "A user who monitors alarms and assets.")
+    System(alarmApp, "Alarm App (SPA)", "The frontend application.")
+    System(eventGateway, "Event Gateway", "Manages real-time connections.")
+    System_Ext(orManager, "OpenRemote Manager", "Core IoT Platform")
+
+    Rel_D(operator, alarmApp, "Uses", "HTTPS")
+    Rel_D(alarmApp, eventGateway, "Subscribes to streams", "WSS")
+    Rel_D(eventGateway, orManager, "Ingests events", "WSS/MQTT")

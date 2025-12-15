@@ -1,0 +1,13 @@
+C4Container
+    title Container Diagram for OpenRemote Alarm App
+
+    Person(operator, "Operator", "A user who monitors alarms and assets.")
+
+    System_Boundary(c1, "Alarm App System") {
+        Container(spa, "Single Page Application", "Svelte, Vite, TypeScript", "The web application running in the user's browser.")
+    }
+
+    System_Ext(orManager, "OpenRemote Manager", "Core IoT Platform")
+    
+    Rel_D(operator, spa, "Uses", "HTTPS")
+    Rel_D(spa, orManager, "API Calls (REST) & Event Subscription (WSS)", "JSON/HTTPS")

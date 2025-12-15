@@ -1,0 +1,27 @@
+C4Component
+    title Component Diagram for Alarm App (SPA)
+
+    Container_Boundary(spa, "Single Page Application") {
+        Component(app, "App.svelte", "Svelte Component", "Main entry point and layout.")
+        Component(router, "Router/Navigation", "Custom Logic", "Handles page switching.")
+        
+        Component(alarmList, "AlarmList Page", "Svelte Component", "Displays list of alarms.")
+        Component(assetList, "AssetList Page", "Svelte Component", "Displays list of assets.")
+        
+        Component(store, "Global Store", "Svelte 5 Runes", "Manages application state (alarms, assets, user).")
+        Component(orService, "OpenRemote Service", "TypeScript Class", "Handles communication with OpenRemote Manager.")
+        
+        Rel_D(app, router, "Uses")
+        Rel_D(router, alarmList, "Renders")
+        Rel_D(router, assetList, "Renders")
+        
+        Rel_D(alarmList, store, "Reads/Writes")
+        Rel_D(assetList, store, "Reads/Writes")
+        
+        Rel_D(store, orService, "Uses for data fetching")
+        Rel_U(orService, store, "Updates state on events")
+    }
+
+    System_Ext(orManager, "OpenRemote Manager", "Core IoT Platform")
+
+    Rel_D(orService, orManager, "REST API / WSS", "HTTPS")

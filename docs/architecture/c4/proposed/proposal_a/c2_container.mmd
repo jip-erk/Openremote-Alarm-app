@@ -1,0 +1,17 @@
+C4Container
+    title Container Diagram - Proposal A: BFF + Caching Gateway
+
+    Person(operator, "Operator", "A user who monitors alarms and assets.")
+
+    System_Boundary(c1, "Alarm App System") {
+        Container(spa, "Single Page Application", "Svelte, Vite", "Frontend UI.")
+        Container(bff, "BFF Service", "Node.js/Bun", "Aggregates data, handles caching, and simplifies API for frontend.")
+        ContainerDb(cache, "Cache", "Redis/In-Memory", "Stores frequently accessed data.")
+    }
+
+    System_Ext(orManager, "OpenRemote Manager", "Core IoT Platform")
+
+    Rel_D(operator, spa, "Uses", "HTTPS")
+    Rel_D(spa, bff, "API Calls", "JSON/HTTPS")
+    Rel_R(bff, cache, "Reads/Writes")
+    Rel_D(bff, orManager, "Fetches Data", "HTTPS")

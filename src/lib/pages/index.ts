@@ -3,10 +3,12 @@ import AlarmList from "./AlarmList.svelte";
 import AssetList from "./AssetList.svelte";
 import AssetForm from "./AssetForm.svelte";
 import Appearance from "./Appearance.svelte";
+import Documentation from "./Documentation.svelte";
 
 import NotificationsRounded from "@iconify-svelte/material-symbols/notifications-rounded";
 import LabProfileRounded from "@iconify-svelte/material-symbols/lab-profile-rounded";
 import DeviceHubRounded from "@iconify-svelte/material-symbols/device-hub-rounded";
+import BookOpen from "@lucide/svelte/icons/book-open";
 
 export enum PageIndex {
   ALARMS,
@@ -14,6 +16,7 @@ export enum PageIndex {
   ASSETS,
   ASSET,
   APPEARANCE,
+  DOCUMENTATION,
 }
 
 // export enum HiddenPageIndex {
@@ -66,6 +69,14 @@ export const pages = [
     icon: DeviceHubRounded,
     component: Appearance,
     roles: ["read:assets", "read:alarms"],
+    hidden: true,
+  },
+  {
+    title: "Documentation",
+    index: PageIndex.DOCUMENTATION,
+    icon: BookOpen,
+    component: Documentation,
+    roles: [], // Publicly accessible or basic auth
     hidden: true,
   },
 ];

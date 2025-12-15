@@ -1,0 +1,17 @@
+C4Container
+    title Container Diagram - Proposal B: Event-Driven + Streaming Updates
+
+    Person(operator, "Operator", "A user who monitors alarms and assets.")
+
+    System_Boundary(c1, "Alarm App System") {
+        Container(spa, "Single Page Application", "Svelte, Vite", "Frontend UI.")
+        Container(gateway, "Event Gateway", "Node.js/Go", "Handles WebSocket connections and broadcasts updates.")
+        Container(processor, "Stream Processor", "Kafka/RabbitMQ/Internal", "Processes and dedupes events.")
+    }
+
+    System_Ext(orManager, "OpenRemote Manager", "Core IoT Platform")
+
+    Rel_D(operator, spa, "Uses", "HTTPS")
+    Rel_D(spa, gateway, "Subscribes", "WSS")
+    Rel_R(gateway, processor, "Consumes processed events")
+    Rel_D(processor, orManager, "Ingests raw events", "WSS/MQTT")

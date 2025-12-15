@@ -1,0 +1,9 @@
+C4Context
+    title System Context - Proposal C: Modular Monorepo + Shared SDK
+
+    Person(operator, "Operator", "A user who monitors alarms and assets.")
+    System(alarmApp, "Alarm App (Modular)", "The frontend application composed of modules.")
+    System_Ext(orManager, "OpenRemote Manager", "Core IoT Platform")
+
+    Rel_D(operator, alarmApp, "Uses", "HTTPS")
+    Rel_D(alarmApp, orManager, "Uses Shared SDK for communication", "HTTPS/WSS")

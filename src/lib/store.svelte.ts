@@ -76,7 +76,7 @@ function normalizeUrl(value?: string) {
   return value.replace(/\/+$|\/+(?=\?)/g, "");
 }
 
-function resolveManagerBaseUrl() {
+export function resolveManagerBaseUrl() {
   const explicit = normalizeUrl(import.meta.env?.VITE_OR_MANAGER_URL);
   if (explicit) return explicit;
   // Always use the Docker OpenRemote instance
@@ -342,7 +342,9 @@ class OpenRemoteService {
     const page = pages.find((p) => p.index === pageIndex);
     if (!page) return;
     const roles = appState.user?.roles?.get("openremote");
-    if (!page.roles.some((r) => roles?.includes(r))) return;
+    // If page has roles defined, check them. If empty, it's public.
+    if (page.roles.length > 0 && !page.roles.some((r) => roles?.includes(r)))
+      return;
     appState.pageIndex = pageIndex;
     savePageIndex(pageIndex);
     if (alarm) {
@@ -361,7 +363,9 @@ class OpenRemoteService {
     const page = pages.find((p) => p.index === pageIndex);
     if (!page) return;
     const roles = appState.user?.roles?.get("openremote");
-    if (!page.roles.some((r) => roles?.includes(r))) return;
+    // If page has roles defined, check them. If empty, it's public.
+    if (page.roles.length > 0 && !page.roles.some((r) => roles?.includes(r)))
+      return;
     appState.pageIndex = pageIndex;
     savePageIndex(pageIndex);
     if (asset) {

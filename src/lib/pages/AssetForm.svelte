@@ -11,8 +11,13 @@
   import { Textarea } from "$lib/components/ui/textarea/index.js";
   import AlarmCard from "$lib/components/AlarmCard.svelte";
   import { PageIndex } from "$lib/pages";
-  import { appState, openRemoteService } from "$lib/store.svelte";
+  import {
+    appState,
+    openRemoteService,
+    resolveManagerBaseUrl,
+  } from "$lib/store.svelte";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
+  import ExternalLink from "@lucide/svelte/icons/external-link";
   import {
     getTypeInfoByKey,
     resolveTypeKeyFromAsset,
@@ -33,6 +38,15 @@
 
   const handleBack = () => {
     openRemoteService.navigateTo(PageIndex.ASSETS);
+  };
+
+  const handleOpenInManager = () => {
+    const assetId = appState.selectedUserAssetLink?.id?.assetId;
+    if (!assetId) return;
+    const baseUrl = resolveManagerBaseUrl();
+    const isConsole = appState.consoleAssetIds[assetId];
+    const url = `${baseUrl}/manager/#/assets/${!!isConsole}/${assetId}`;
+    window.open(url, "_blank");
   };
 
   const relatedAlarms = $derived(
@@ -146,11 +160,23 @@
 </script>
 
 <div class="flex flex-col gap-6 pb-24">
-  <div class="flex items-center gap-3">
+  <div class="flex items-center justify-between gap-3">
     <Button variant="ghost" size="sm" class="gap-2" onclick={handleBack}>
       <ArrowLeft class="size-4" />
       Back to assets
     </Button>
+
+    {#if appState.selectedUserAssetLink?.id?.assetId}
+      <Button
+        variant="outline"
+        size="sm"
+        class="gap-2"
+        onclick={handleOpenInManager}
+      >
+        <ExternalLink class="size-4" />
+        Open in OpenRemote
+      </Button>
+    {/if}
   </div>
 
   <header class="flex flex-col gap-2">

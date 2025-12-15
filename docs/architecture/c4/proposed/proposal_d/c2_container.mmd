@@ -1,0 +1,19 @@
+C4Container
+    title Container Diagram - Proposal D: Multi-Tenant / Multi-Instance
+
+    Person(operator, "Operator", "A user who monitors alarms and assets.")
+
+    System_Boundary(c1, "Alarm App System") {
+        Container(spa, "Single Page Application", "Svelte", "Frontend UI with tenant switching.")
+        Container(registry, "Instance Registry Service", "Node.js/Bun", "Stores configuration for multiple OR instances.")
+        Container(authBroker, "Auth Broker", "Keycloak/OAuth", "Handles authentication across tenants.")
+    }
+
+    System_Ext(orManager1, "OpenRemote Manager (Tenant A)", "IoT Platform A")
+    System_Ext(orManager2, "OpenRemote Manager (Tenant B)", "IoT Platform B")
+
+    Rel_D(operator, spa, "Uses", "HTTPS")
+    Rel_D(spa, registry, "Fetches tenant config")
+    Rel_R(spa, authBroker, "Authenticates")
+    Rel_D(spa, orManager1, "Data/Events", "HTTPS/WSS")
+    Rel_D(spa, orManager2, "Data/Events", "HTTPS/WSS")

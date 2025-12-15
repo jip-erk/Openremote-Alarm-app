@@ -1,8 +1,13 @@
 <script lang="ts">
   import { AlarmStatus } from "@openremote/model";
   import AlarmCard from "$lib/components/AlarmCard.svelte";
+  import AlarmGroup from "$lib/components/AlarmGroup.svelte";
+  import { groupAlarms } from "$lib/alarm-grouping";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+  import ChevronDown from "@lucide/svelte/icons/chevron-down";
+  import User from "@lucide/svelte/icons/user";
   import { appState } from "$lib/store.svelte";
 
   const statusFilters = [
@@ -16,10 +21,13 @@
   type FilterValue = (typeof statusFilters)[number]["value"];
 
   let filter = $state<FilterValue>("all");
+  let assigneeFilter = $state<string>("all");
 
   const userAlarms = $derived(
     appState.alarms.filter((alarm) => alarm.assigneeId === appState.user?.id)
   );
+  const userAlarmGroups = $derived(groupAlarms(userAlarms));
+
   const userActive = $derived(
     userAlarms.filter(
       (alarm) =>
@@ -33,9 +41,24 @@
   );
 
   const visibleAlarms = $derived(
-    filter === "all"
+    (filter === "all"
       ? otherAlarms
       : otherAlarms.filter((alarm) => alarm.status === filter)
+    ).filter((alarm) => {
+      if (assigneeFilter === "all") return true;
+      if (assigneeFilter === "unassigned") return !alarm.assigneeId;
+      return alarm.assigneeId === assigneeFilter;
+    })
+  );
+  const visibleAlarmGroups = $derived(groupAlarms(visibleAlarms));
+
+  const selectedAssigneeLabel = $derived(
+    assigneeFilter === "all"
+      ? "Assignee"
+      : assigneeFilter === "unassigned"
+        ? "Unassigned"
+        : appState.assignees.find((a) => a.value === assigneeFilter)?.label ||
+          "Unknown"
   );
 </script>
 
@@ -56,11 +79,17 @@
     </header>
 
     <div class="grid gap-4 md:grid-cols-2">
-      {#each userAlarms as alarm (alarm.id)}
-        <AlarmCard {alarm} />
+      {#each userAlarmGroups as group (group.key)}
+        {#if group.count === 1}
+          <AlarmCard alarm={group.items[0]} />
+        {:else}
+          <div class="md:col-span-2">
+            <AlarmGroup {group} />
+          </div>
+        {/if}
       {:else}
         <div
-          class="rounded-3xl border border-dashed border-border/60 bg-[var(--surface-glass)]/70 p-8 text-center text-sm text-muted-foreground"
+          class="rounded-3xl border border-dashed border-border/60 bg-[var(--surface-glass)]/70 p-8 text-center text-sm text-muted-foreground md:col-span-2"
         >
           You’re all caught up — no alarms are assigned to you right now.
         </div>
@@ -98,15 +127,51 @@
             {option.label}
           </Button>
         {/each}
+
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger
+            class={`inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 text-xs rounded-full border gap-2 ${
+              assigneeFilter !== "all"
+                ? "bg-accent text-accent-foreground border-transparent hover:bg-accent/90"
+                : "bg-transparent text-muted-foreground border-border/60 hover:bg-[var(--surface-elevated)]"
+            }`}
+          >
+            <User class="size-3.5" />
+            {selectedAssigneeLabel}
+            <ChevronDown class="size-3.5 opacity-50" />
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content align="end" class="w-56">
+            <DropdownMenu.Label>Filter by assignee</DropdownMenu.Label>
+            <DropdownMenu.Separator />
+            <DropdownMenu.RadioGroup bind:value={assigneeFilter}>
+              <DropdownMenu.RadioItem value="all">All</DropdownMenu.RadioItem>
+              <DropdownMenu.RadioItem value="unassigned">
+                No assignee
+              </DropdownMenu.RadioItem>
+              <DropdownMenu.Separator />
+              {#each appState.assignees.filter((a) => a.value !== null && a.value !== appState.user?.id) as assignee (assignee.value)}
+                <DropdownMenu.RadioItem value={assignee.value || ""}>
+                  {assignee.label}
+                </DropdownMenu.RadioItem>
+              {/each}
+            </DropdownMenu.RadioGroup>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
       </div>
     </header>
 
     <div class="grid gap-4 md:grid-cols-2">
-      {#each visibleAlarms as alarm (alarm.id)}
-        <AlarmCard {alarm} />
+      {#each visibleAlarmGroups as group (group.key)}
+        {#if group.count === 1}
+          <AlarmCard alarm={group.items[0]} />
+        {:else}
+          <div class="md:col-span-2">
+            <AlarmGroup {group} />
+          </div>
+        {/if}
       {:else}
         <div
-          class="rounded-3xl border border-dashed border-border/60 bg-[var(--surface-glass)]/70 p-10 text-center text-sm text-muted-foreground"
+          class="rounded-3xl border border-dashed border-border/60 bg-[var(--surface-glass)]/70 p-10 text-center text-sm text-muted-foreground md:col-span-2"
         >
           No alarms match the current filter.
         </div>

@@ -1,0 +1,11 @@
+C4Context
+    title System Context - Proposal A: BFF + Caching Gateway
+
+    Person(operator, "Operator", "A user who monitors alarms and assets.")
+    System(alarmApp, "Alarm App (SPA)", "The frontend application.")
+    System(bff, "Backend-for-Frontend", "Handles API requests, caching, and auth.")
+    System_Ext(orManager, "OpenRemote Manager", "Core IoT Platform")
+
+    Rel_D(operator, alarmApp, "Uses", "HTTPS")
+    Rel_D(alarmApp, bff, "API Calls", "HTTPS/JSON")
+    Rel_D(bff, orManager, "Proxies requests & Caches data", "HTTPS/WSS")

@@ -1,0 +1,20 @@
+C4Container
+    title Container Diagram - Proposal C: Modular Monorepo + Shared SDK
+
+    Person(operator, "Operator", "A user who monitors alarms and assets.")
+
+    System_Boundary(c1, "Alarm App System") {
+        Container(spa, "Main App Shell", "Svelte", "Loads feature modules.")
+        Container(alarmsModule, "Alarms Module", "Svelte Package", "Handles alarm views and logic.")
+        Container(assetsModule, "Assets Module", "Svelte Package", "Handles asset views and logic.")
+        Container(sdk, "Shared SDK", "TypeScript Library", "Typed API client and shared types.")
+    }
+
+    System_Ext(orManager, "OpenRemote Manager", "Core IoT Platform")
+
+    Rel_D(operator, spa, "Uses", "HTTPS")
+    Rel_D(spa, alarmsModule, "Loads")
+    Rel_D(spa, assetsModule, "Loads")
+    Rel_D(alarmsModule, sdk, "Uses")
+    Rel_D(assetsModule, sdk, "Uses")
+    Rel_D(sdk, orManager, "API Calls", "HTTPS/WSS")

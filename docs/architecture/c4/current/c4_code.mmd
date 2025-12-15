@@ -1,0 +1,41 @@
+classDiagram
+    direction TB
+    class OpenRemoteService {
+        +init()
+        +fetchAlarms()
+        +fetchAssets()
+        +listAssignees()
+        +loadAppearance()
+    }
+
+    class AppState {
+        +pageIndex: number
+        +selectedAlarm: SentAlarm
+        +selectedAsset: Asset
+        +alarms: SentAlarm[]
+        +assets: UserAssetLink[]
+        +user: User
+    }
+
+    class User {
+        +id: string
+        +username: string
+        +roles: Map
+    }
+
+    class SentAlarm {
+        +id: string
+        +status: AlarmStatus
+        +severity: AlarmSeverity
+    }
+
+    class Asset {
+        +id: string
+        +name: string
+        +type: string
+    }
+
+    OpenRemoteService --> AppState : Updates
+    AppState --> User : Contains
+    AppState --> SentAlarm : Contains List
+    AppState --> Asset : Contains List
