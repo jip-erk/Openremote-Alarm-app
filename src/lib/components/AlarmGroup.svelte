@@ -67,10 +67,12 @@
         <div class="text-muted-foreground flex items-center gap-2 text-xs">
           <span>{latestTime}</span>
           {#if group.description}
-            <span class="hidden opacity-50 sm:inline-block">•</span>
-            <span class="line-clamp-1 hidden max-w-[300px] sm:inline-block">
-              {group.description}
-            </span>
+            <div class="flex flex-1 items-center justify-center gap-2">
+              <span class="hidden opacity-50 sm:inline-block">•</span>
+              <span class="line-clamp-1 hidden w-full sm:inline-block">
+                {group.description}
+              </span>
+            </div>
           {/if}
         </div>
       </div>
